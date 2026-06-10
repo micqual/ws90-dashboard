@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CropType {
+  id                   Int       @id @default(autoincrement())
+  crop_name            String
+  variety              String?
+  base_temp_gdd        Float?
+  target_gdd_harvest   Float?
+  spray_wind_limit_kmh Float?
+  spray_humidity_max   Float?
+  spray_humidity_min   Float?
+  spray_temp_min       Float?
+  spray_temp_max       Float?
+  frost_alert_temp     Float?
+  frost_critical_stage String?
+  notes                String?
+  stations             Station[]
+  @@map("crop_types")
+}
+
+model Farmer {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  email         String    @unique
+  password_hash String
+  tier          String    @default("base")
+  created_at    DateTime  @default(now())
+  stations      Station[]
+  @@map("farmers")
+}
+
+model Station {
+  id                  String    @id
+  farmer_id           String    @db.Uuid
+  paddock_name        String?
+  hectares            Float?
+  crop_type_id        Int?
+  planted_date        DateTime?
+  growth_stage        String?
+  spray_wind_override Float?
+  frost_temp_override Float?
+  created_at          DateTime  @default(now())
+  farmer              Farmer    @relation(fields: [farmer_id], references: [id])
+  crop_type           CropType? @relation(fields: [crop_type_id], references: [id])
+  weather_readings    WeatherReading[]
+  @@map("stations")
+}
+
+model WeatherReading {
+  id            Int      @id @default(autoincrement())
+  created_at    DateTime @default(now())
+  station_id    String
+  temperature_c Float?
+  humidity      Float?
+  wind_dir_deg  Float?
+  wind_avg_ms   Float?
+  wind_max_ms   Float?
+  rain_mm       Float?
+  uvi           Float?
+  light_lux     Float?
+  battery_mv    Float?
+  rssi          Int?
+  station       Station  @relation(fields: [station_id], references: [id])
+  @@map("weather_readings")
+}
