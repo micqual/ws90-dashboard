@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!farmer) return null
+        if (farmer.active === false) return null
 
         const passwordValid = await bcrypt.compare(
           credentials.password,

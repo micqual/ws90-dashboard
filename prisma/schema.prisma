@@ -31,6 +31,7 @@ model Farmer {
   email         String    @unique
   password_hash String
   tier          String    @default("base")
+  active        Boolean   @default(true)
   created_at    DateTime  @default(now())
   stations      Station[]
   @@map("farmers")

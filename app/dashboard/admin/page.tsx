@@ -6,6 +6,8 @@ interface Farmer {
   id: string
   name: string
   email: string
+  tier: string
+  active: boolean
   stations: any[]
 }
 
@@ -32,10 +34,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Farmer form
   const [farmerForm, setFarmerForm] = useState({ name: '', email: '', password: '', tier: 'base' })
-
-  // Station form
   const [stationForm, setStationForm] = useState({
     id: '', farmer_id: '', paddock_name: '', hectares: '',
     crop_type_id: '', planted_date: '', growth_stage: '',
@@ -76,6 +75,38 @@ export default function AdminPage() {
     }
   }
 
+  async function toggleActive(farmer: Farmer) {
+    try {
+      const res = await fetch(`/api/admin/farmers/${farmer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !farmer.active }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setFarmers(prev => prev.map(f => f.id === farmer.id ? { ...f, active: data.active } : f))
+      setMessage({ type: 'success', text: `${data.name} ${data.active ? 'reactivated' : 'deactivated'}` })
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message })
+    }
+  }
+
+  async function changeTier(farmer: Farmer, tier: string) {
+    try {
+      const res = await fetch(`/api/admin/farmers/${farmer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setFarmers(prev => prev.map(f => f.id === farmer.id ? { ...f, tier: data.tier } : f))
+      setMessage({ type: 'success', text: `${data.name} moved to ${tier}` })
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message })
+    }
+  }
+
   async function saveStation(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -104,7 +135,6 @@ export default function AdminPage() {
 
   const inputCls = `w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2 text-stone-100 text-sm
     placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30`
-
   const labelCls = 'block text-xs text-stone-500 mb-1 uppercase tracking-wider'
 
   if (loading) {
@@ -132,7 +162,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-1 border-b border-[#2a3518]">
         {(['farmers', 'stations'] as const).map(tab => (
           <button
@@ -151,7 +180,6 @@ export default function AdminPage() {
 
       {activeTab === 'farmers' && (
         <div className="grid sm:grid-cols-2 gap-6">
-          {/* Create farmer form */}
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">Add Farmer</h2>
             <form onSubmit={createFarmer} className="space-y-3">
@@ -174,12 +202,18 @@ export default function AdminPage() {
                 <label className={labelCls}>Plan</label>
                 <div className="flex gap-2">
                   {(['base', 'pro'] as const).map(t => (
-                    <button key={t} type="button" onClick={() => setFarmerForm(p => ({ ...p, tier: t }))}
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFarmerForm(p => ({ ...p, tier: t }))}
                       className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${
                         farmerForm.tier === t
-                          ? t === 'pro' ? 'bg-amber-900/50 border-amber-700/60 text-amber-300' : 'bg-field-800 border-field-600 text-field-200'
+                          ? t === 'pro'
+                            ? 'bg-amber-900/50 border-amber-700/60 text-amber-300'
+                            : 'bg-field-800 border-field-600 text-field-200'
                           : 'bg-[#0e1108] border-[#2a3518] text-stone-500 hover:text-stone-300'
-                      }`}>
+                      }`}
+                    >
                       {t === 'pro' ? '⭐ Pro' : 'Base'}
                     </button>
                   ))}
@@ -192,28 +226,58 @@ export default function AdminPage() {
             </form>
           </div>
 
-          {/* Farmer list */}
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">
               Farmers <span className="text-stone-600 font-normal">({farmers.length})</span>
             </h2>
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {farmers.length === 0 && <div className="text-sm text-stone-600">No farmers yet</div>}
               {farmers.map(f => (
-                <div key={f.id} className="flex items-start justify-between gap-2 bg-[#0e1108] rounded-lg px-3 py-2.5 border border-[#2a3518]">
-                  <div>
-                    <div className="text-sm font-medium text-stone-200">{f.name}</div>
-                    <div className="text-xs text-stone-500">{f.email}</div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                      f.tier === 'pro'
-                        ? 'bg-amber-900/40 text-amber-300 border-amber-700/50'
-                        : 'bg-stone-800/60 text-stone-500 border-stone-700/50'
-                    }`}>{(f.tier ?? 'base').toUpperCase()}</span>
-                    <span className="text-xs text-stone-600">
-                      {f.stations?.length ?? 0} station{f.stations?.length !== 1 ? 's' : ''}
-                    </span>
+                <div key={f.id} className={`bg-[#0e1108] rounded-lg px-3 py-2.5 border transition-colors ${
+                  f.active ? 'border-[#2a3518]' : 'border-red-900/30 opacity-60'
+                }`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className={`text-sm font-medium ${f.active ? 'text-stone-200' : 'text-stone-500'}`}>
+                          {f.name}
+                        </div>
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                          f.tier === 'pro'
+                            ? 'bg-amber-900/40 text-amber-300 border-amber-700/50'
+                            : 'bg-stone-800/60 text-stone-500 border-stone-700/50'
+                        }`}>{(f.tier ?? 'base').toUpperCase()}</span>
+                        {!f.active && (
+                          <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border bg-red-900/40 text-red-400 border-red-700/50">
+                            INACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-stone-500 mt-0.5">{f.email}</div>
+                      <div className="text-xs text-stone-600 mt-0.5">
+                        {f.stations?.length ?? 0} station{f.stations?.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5 shrink-0">
+                      {/* Tier toggle */}
+                      <button
+                        onClick={() => changeTier(f, f.tier === 'pro' ? 'base' : 'pro')}
+                        className="text-[10px] px-2 py-1 rounded border border-[#2a3518] text-stone-500 hover:text-stone-300 hover:border-[#3d5020] transition-colors"
+                      >
+                        {f.tier === 'pro' ? '→ Base' : '→ Pro'}
+                      </button>
+                      {/* Active toggle */}
+                      <button
+                        onClick={() => toggleActive(f)}
+                        className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                          f.active
+                            ? 'border-red-800/50 text-red-400 hover:bg-red-950/40'
+                            : 'border-emerald-800/50 text-emerald-400 hover:bg-emerald-950/40'
+                        }`}
+                      >
+                        {f.active ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -224,7 +288,6 @@ export default function AdminPage() {
 
       {activeTab === 'stations' && (
         <div className="grid sm:grid-cols-2 gap-6">
-          {/* Assign station form */}
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">Add / Update Station</h2>
             <form onSubmit={saveStation} className="space-y-3">
@@ -238,7 +301,7 @@ export default function AdminPage() {
                 <select className={inputCls} required
                   value={stationForm.farmer_id} onChange={e => setStationForm(p => ({ ...p, farmer_id: e.target.value }))}>
                   <option value="">Select farmer…</option>
-                  {farmers.map(f => (
+                  {farmers.filter(f => f.active).map(f => (
                     <option key={f.id} value={f.id}>{f.name} ({f.email})</option>
                   ))}
                 </select>
@@ -296,7 +359,6 @@ export default function AdminPage() {
             </form>
           </div>
 
-          {/* Station list */}
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">
               Stations <span className="text-stone-600 font-normal">({stations.length})</span>
@@ -312,8 +374,7 @@ export default function AdminPage() {
                   <div>
                     <div className="text-sm font-medium text-stone-200">{s.paddock_name || s.id}</div>
                     <div className="text-xs text-stone-500">
-                      {s.id}
-                      {s.crop_type && ` · ${s.crop_type.crop_name}`}
+                      {s.id}{s.crop_type && ` · ${s.crop_type.crop_name}`}
                     </div>
                   </div>
                   <div className="text-xs text-stone-600 shrink-0 text-right">
