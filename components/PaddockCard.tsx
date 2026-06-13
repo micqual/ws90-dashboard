@@ -131,7 +131,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
 
             <div className="bg-[#161e0c] border border-[#344a20] rounded-lg p-3">
               <div className="stat-label">Humidity</div>
-              <div className="stat-value text-sky-400">
+              <div className="stat-value text-sky-400 text-center w-full">
                 {reading.humidity != null ? `${reading.humidity.toFixed(0)}%` : '—'}
               </div>
             </div>
