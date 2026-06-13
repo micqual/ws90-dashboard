@@ -7,7 +7,7 @@ export default function SprayBadge({ status, size = 'md' }: SprayBadgeProps) {
   const s = status?.toUpperCase()
 
   let cls = ''
-  let label = 'UNKNOWN'
+  let label = 'ALL CLEAR'
   let dot = ''
 
   if (s === 'SUITABLE') {
@@ -23,16 +23,16 @@ export default function SprayBadge({ status, size = 'md' }: SprayBadgeProps) {
     label = 'NOT SUITABLE'
     dot = 'bg-red-400'
   } else {
-    cls = 'bg-stone-800/60 text-stone-400 border border-stone-700/50'
-    label = 'NO DATA'
-    dot = 'bg-stone-500'
+    cls = 'bg-field-800/60 text-field-400 border border-field-700/50'
+    label = 'ALL CLEAR'
+    dot = 'bg-field-500'
   }
 
   const textSize = size === 'sm' ? 'text-[10px]' : 'text-xs'
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md font-mono font-bold ${textSize} ${cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot} animate-pulse-slow`} />
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
       {label}
     </span>
   )

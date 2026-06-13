@@ -63,16 +63,16 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
             ) : (
               <button
                 onClick={() => setShowSettings(true)}
-                className="text-xs text-stone-600 hover:text-field-400 transition-colors underline underline-offset-2"
+                className="text-xs text-stone-500 hover:text-field-400 transition-colors underline underline-offset-2"
               >
                 Set crop…
               </button>
             )}
             {station.hectares && (
-              <span className="text-xs text-stone-600">{station.hectares} ha</span>
+              <span className="text-xs text-stone-500">{station.hectares} ha</span>
             )}
             {station.planted_date ? (
-              <span className="text-xs text-stone-600">
+              <span className="text-xs text-stone-500">
                 Planted {format(new Date(station.planted_date), 'd MMM yyyy')}
               </span>
             ) : (
@@ -89,7 +89,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
             className={`p-1 rounded-md transition-colors ${
               showSettings
                 ? 'text-field-400 bg-field-900/50'
-                : 'text-stone-600 hover:text-stone-400 hover:bg-white/5'
+                : 'text-stone-500 hover:text-stone-400 hover:bg-white/5'
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -122,14 +122,14 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
               className={`rounded-lg p-3 text-left transition-colors border ${
                 showChart === 'temperature'
                   ? 'bg-orange-950/40 border-orange-800/50'
-                  : 'bg-[#0e1108] border-[#2a3518] hover:border-[#3d5020]'
+                  : 'bg-[#161e0c] border-[#344a20] hover:border-[#3d5020]'
               }`}
             >
               <div className="stat-label">Temp</div>
               <div className="stat-value text-orange-400">{formatTemp(reading.temperature_c)}</div>
             </button>
 
-            <div className="bg-[#0e1108] border border-[#2a3518] rounded-lg p-3">
+            <div className="bg-[#161e0c] border border-[#344a20] rounded-lg p-3">
               <div className="stat-label">Humidity</div>
               <div className="stat-value text-sky-400">
                 {reading.humidity != null ? `${reading.humidity.toFixed(0)}%` : '—'}
@@ -141,7 +141,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
               className={`rounded-lg p-3 text-left transition-colors border ${
                 showChart === 'wind'
                   ? 'bg-violet-950/40 border-violet-800/50'
-                  : 'bg-[#0e1108] border-[#2a3518] hover:border-[#3d5020]'
+                  : 'bg-[#161e0c] border-[#344a20] hover:border-[#3d5020]'
               }`}
             >
               <div className="stat-label">
@@ -149,7 +149,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
               </div>
               <div className="stat-value text-violet-400">{formatWind(reading.wind_avg_ms)}</div>
               {reading.wind_max_ms != null && (
-                <div className="text-[10px] text-stone-600 mt-0.5 font-mono">
+                <div className="text-[10px] text-stone-500 mt-0.5 font-mono">
                   Max {formatWind(reading.wind_max_ms)}
                 </div>
               )}
@@ -160,7 +160,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
               className={`rounded-lg p-3 text-left transition-colors border ${
                 showChart === 'rain'
                   ? 'bg-blue-950/40 border-blue-800/50'
-                  : 'bg-[#0e1108] border-[#2a3518] hover:border-[#3d5020]'
+                  : 'bg-[#161e0c] border-[#344a20] hover:border-[#3d5020]'
               }`}
             >
               <div className="stat-label">Rainfall</div>
@@ -170,7 +170,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
 
           {/* Chart panel */}
           {showChart && (
-            <div className="bg-[#0e1108] rounded-lg p-3 border border-[#2a3518]">
+            <div className="bg-[#161e0c] rounded-lg p-3 border border-[#344a20]">
               <div className="text-xs text-stone-500 mb-2 capitalize">
                 {showChart} — last 48 readings
               </div>
@@ -201,14 +201,14 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
             {reading.rssi != null && (
               <span>Signal {reading.rssi} dBm</span>
             )}
-            <span className="ml-auto text-stone-700">
+            <span className="ml-auto text-stone-500">
               {format(new Date(reading.created_at), 'd MMM HH:mm')}
             </span>
           </div>
 
           {/* GDD — Pro only */}
           {isPro && (gdd || crop?.target_gdd_harvest) && (
-            <div className="pt-2 border-t border-[#2a3518]">
+            <div className="pt-2 border-t border-[#344a20]">
               <GDDBar
                 current={gdd?.accumulated_gdd ?? gdd?.gdd_total ?? gdd?.gdd}
                 target={crop?.target_gdd_harvest}
@@ -223,43 +223,43 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
 
           {/* Disease risk — Pro only */}
           {isPro && disease && (
-            <div className="pt-2 border-t border-[#2a3518]">
-              <div className="text-xs text-stone-600 mb-2 uppercase tracking-wider font-medium">Disease Risk</div>
+            <div className="pt-2 border-t border-[#344a20]">
+              <div className="text-xs text-stone-500 mb-2 uppercase tracking-wider font-medium">Disease Risk</div>
               <DiseaseRisk disease={disease} cropName={crop?.crop_name} />
             </div>
           )}
 
           {/* Spray details */}
           {spray && (
-            <div className="pt-2 border-t border-[#2a3518]">
-              <div className="text-xs text-stone-600 mb-2 uppercase tracking-wider font-medium">Spray window</div>
+            <div className="pt-2 border-t border-[#344a20]">
+              <div className="text-xs text-stone-500 mb-2 uppercase tracking-wider font-medium">Spray window</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {spray.wind_speed_kmh != null && (
-                  <div className="flex justify-between bg-[#0e1108] rounded px-2 py-1 border border-[#2a3518]">
+                  <div className="flex justify-between bg-[#161e0c] rounded px-2 py-1 border border-[#344a20]">
                     <span className="text-stone-500">Wind</span>
                     <span className="font-mono text-stone-300">{Number(spray.wind_speed_kmh).toFixed(1)} km/h</span>
                   </div>
                 )}
                 {spray.humidity != null && (
-                  <div className="flex justify-between bg-[#0e1108] rounded px-2 py-1 border border-[#2a3518]">
+                  <div className="flex justify-between bg-[#161e0c] rounded px-2 py-1 border border-[#344a20]">
                     <span className="text-stone-500">Humidity</span>
                     <span className="font-mono text-stone-300">{Number(spray.humidity).toFixed(0)}%</span>
                   </div>
                 )}
                 {spray.temperature_c != null && (
-                  <div className="flex justify-between bg-[#0e1108] rounded px-2 py-1 border border-[#2a3518]">
+                  <div className="flex justify-between bg-[#161e0c] rounded px-2 py-1 border border-[#344a20]">
                     <span className="text-stone-500">Temp</span>
                     <span className="font-mono text-stone-300">{Number(spray.temperature_c).toFixed(1)}°C</span>
                   </div>
                 )}
               </div>
               {spray.reason && (
-                <div className="text-xs text-stone-600 mt-2 italic">{spray.reason}</div>
+                <div className="text-xs text-stone-500 mt-2 italic">{spray.reason}</div>
               )}
             </div>
           )}
           {/* Irrigation log */}
-          <div className="pt-2 border-t border-[#2a3518]">
+          <div className="pt-2 border-t border-[#344a20]">
             <IrrigationLog
               stationId={station.id}
               lastIrrigation={lastIrrigation}
@@ -268,7 +268,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
           </div>
         </div>
       ) : (
-        <div className="p-6 text-center text-stone-600 text-sm">
+        <div className="p-6 text-center text-stone-500 text-sm">
           No weather readings yet for this station
         </div>
       )}
@@ -282,14 +282,14 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
         />
       )}
 
-      <div className="px-4 py-2 border-t border-[#2a3518] flex items-center justify-between">
-        <span className="text-[10px] font-mono text-stone-700">ID: {station.id}</span>
+      <div className="px-4 py-2 border-t border-[#344a20] flex items-center justify-between">
+        <span className="text-[10px] font-mono text-stone-500">ID: {station.id}</span>
         {(gdd?.stage_name || station.growth_stage) && (
-          <span className="text-[10px] text-stone-600 flex items-center gap-1">
+          <span className="text-[10px] text-stone-500 flex items-center gap-1">
             {gdd?.stage_icon && <span>{gdd.stage_icon}</span>}
             <span className="capitalize">{gdd?.stage_name ?? station.growth_stage}</span>
             {!gdd?.stage_name && station.growth_stage && (
-              <span className="text-stone-700 ml-1">(manual)</span>
+              <span className="text-stone-500 ml-1">(manual)</span>
             )}
           </span>
         )}

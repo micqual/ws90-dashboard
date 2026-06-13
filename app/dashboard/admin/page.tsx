@@ -133,8 +133,8 @@ export default function AdminPage() {
     }
   }
 
-  const inputCls = `w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2 text-stone-100 text-sm
-    placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30`
+  const inputCls = `w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm
+    placeholder:text-stone-500 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30`
   const labelCls = 'block text-xs text-stone-500 mb-1 uppercase tracking-wider'
 
   if (loading) {
@@ -162,7 +162,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="flex gap-1 border-b border-[#2a3518]">
+      <div className="flex gap-1 border-b border-[#344a20]">
         {(['farmers', 'stations'] as const).map(tab => (
           <button
             key={tab}
@@ -211,7 +211,7 @@ export default function AdminPage() {
                           ? t === 'pro'
                             ? 'bg-amber-900/50 border-amber-700/60 text-amber-300'
                             : 'bg-field-800 border-field-600 text-field-200'
-                          : 'bg-[#0e1108] border-[#2a3518] text-stone-500 hover:text-stone-300'
+                          : 'bg-[#161e0c] border-[#344a20] text-stone-500 hover:text-stone-300'
                       }`}
                     >
                       {t === 'pro' ? '⭐ Pro' : 'Base'}
@@ -228,13 +228,13 @@ export default function AdminPage() {
 
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">
-              Farmers <span className="text-stone-600 font-normal">({farmers.length})</span>
+              Farmers <span className="text-stone-500 font-normal">({farmers.length})</span>
             </h2>
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {farmers.length === 0 && <div className="text-sm text-stone-600">No farmers yet</div>}
+              {farmers.length === 0 && <div className="text-sm text-stone-500">No farmers yet</div>}
               {farmers.map(f => (
-                <div key={f.id} className={`bg-[#0e1108] rounded-lg px-3 py-2.5 border transition-colors ${
-                  f.active ? 'border-[#2a3518]' : 'border-red-900/30 opacity-60'
+                <div key={f.id} className={`bg-[#161e0c] rounded-lg px-3 py-2.5 border transition-colors ${
+                  f.active ? 'border-[#344a20]' : 'border-red-900/30 opacity-60'
                 }`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -254,7 +254,7 @@ export default function AdminPage() {
                         )}
                       </div>
                       <div className="text-xs text-stone-500 mt-0.5">{f.email}</div>
-                      <div className="text-xs text-stone-600 mt-0.5">
+                      <div className="text-xs text-stone-500 mt-0.5">
                         {f.stations?.length ?? 0} station{f.stations?.length !== 1 ? 's' : ''}
                       </div>
                     </div>
@@ -262,7 +262,7 @@ export default function AdminPage() {
                       {/* Tier toggle */}
                       <button
                         onClick={() => changeTier(f, f.tier === 'pro' ? 'base' : 'pro')}
-                        className="text-[10px] px-2 py-1 rounded border border-[#2a3518] text-stone-500 hover:text-stone-300 hover:border-[#3d5020] transition-colors"
+                        className="text-[10px] px-2 py-1 rounded border border-[#344a20] text-stone-500 hover:text-stone-300 hover:border-[#3d5020] transition-colors"
                       >
                         {f.tier === 'pro' ? '→ Base' : '→ Pro'}
                       </button>
@@ -361,15 +361,15 @@ export default function AdminPage() {
 
           <div className="card p-5">
             <h2 className="font-semibold text-stone-200 mb-4">
-              Stations <span className="text-stone-600 font-normal">({stations.length})</span>
+              Stations <span className="text-stone-500 font-normal">({stations.length})</span>
             </h2>
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
-              {stations.length === 0 && <div className="text-sm text-stone-600">No stations yet</div>}
+              {stations.length === 0 && <div className="text-sm text-stone-500">No stations yet</div>}
               {stations.map(s => (
                 <button
                   key={s.id}
                   onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '' }))}
-                  className="w-full flex items-start justify-between gap-2 bg-[#0e1108] hover:bg-[#161d0e] rounded-lg px-3 py-2.5 border border-[#2a3518] text-left transition-colors"
+                  className="w-full flex items-start justify-between gap-2 bg-[#161e0c] hover:bg-[#222e16] rounded-lg px-3 py-2.5 border border-[#344a20] text-left transition-colors"
                 >
                   <div>
                     <div className="text-sm font-medium text-stone-200">{s.paddock_name || s.id}</div>
@@ -377,7 +377,7 @@ export default function AdminPage() {
                       {s.id}{s.crop_type && ` · ${s.crop_type.crop_name}`}
                     </div>
                   </div>
-                  <div className="text-xs text-stone-600 shrink-0 text-right">
+                  <div className="text-xs text-stone-500 shrink-0 text-right">
                     {s.farmer?.name || 'Unassigned'}
                     {s.hectares && <div>{s.hectares} ha</div>}
                   </div>

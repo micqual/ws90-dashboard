@@ -41,7 +41,7 @@ export default function WeatherChart({ stationId, metric }: WeatherChartProps) {
   }
 
   if (!data.length) {
-    return <div className="h-16 flex items-center justify-center text-xs text-stone-600">No history</div>
+    return <div className="h-16 flex items-center justify-center text-xs text-stone-500">No history</div>
   }
 
   const colors = {

@@ -38,7 +38,7 @@ export default function HarvestBadge({ harvest, size = 'md' }: HarvestBadgeProps
         🚜 {label}
       </span>
       {harvest.reason && status !== 'SUITABLE' && (
-        <div className="text-[10px] text-stone-600 italic pl-1">{harvest.reason}</div>
+        <div className="text-[10px] text-stone-500 italic pl-1">{harvest.reason}</div>
       )}
     </div>
   )

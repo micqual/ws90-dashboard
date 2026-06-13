@@ -55,8 +55,8 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
     }
   }
 
-  const inputCls = `w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2 text-stone-100 text-sm
-    placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30 transition-colors`
+  const inputCls = `w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm
+    placeholder:text-stone-500 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30 transition-colors`
   const labelCls = 'block text-xs text-stone-500 mb-1.5 uppercase tracking-wider'
 
   // Check if recent overhead irrigation (within 48h)
@@ -65,7 +65,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
     new Date(lastIrrigation.irrigated_at) > new Date(Date.now() - 48 * 60 * 60 * 1000)
 
   return (
-    <div className="border-t border-[#2a3518] pt-3 mt-1">
+    <div className="border-t border-[#344a20] pt-3 mt-1">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-stone-500 uppercase tracking-wider font-medium">Irrigation</span>
         <button
@@ -73,7 +73,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
           className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
             showForm
               ? 'bg-sky-900/40 border-sky-700/50 text-sky-300'
-              : 'border-[#2a3518] text-stone-500 hover:text-stone-300 hover:border-[#3d5020]'
+              : 'border-[#344a20] text-stone-500 hover:text-stone-300 hover:border-[#3d5020]'
           }`}
         >
           + Log event
@@ -85,7 +85,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
         <div className={`flex items-center justify-between text-xs rounded-lg px-3 py-2 border ${
           recentOverhead
             ? 'bg-sky-950/40 border-sky-800/50 text-sky-300'
-            : 'bg-[#0e1108] border-[#2a3518] text-stone-500'
+            : 'bg-[#161e0c] border-[#344a20] text-stone-500'
         }`}>
           <div className="flex items-center gap-2">
             <span>{TYPE_LABELS[lastIrrigation.type] ?? lastIrrigation.type}</span>
@@ -98,12 +98,12 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
               </span>
             )}
           </div>
-          <span className="text-stone-600 text-[10px]">
+          <span className="text-stone-500 text-[10px]">
             {formatDistanceToNow(new Date(lastIrrigation.irrigated_at), { addSuffix: true })}
           </span>
         </div>
       ) : (
-        <div className="text-xs text-stone-700 italic">No irrigation logged</div>
+        <div className="text-xs text-stone-500 italic">No irrigation logged</div>
       )}
 
       {/* Overhead hold-off warning */}
@@ -115,7 +115,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
 
       {/* Log form */}
       {showForm && (
-        <form onSubmit={handleLog} className="mt-3 space-y-3 bg-[#111608] border border-[#2a3518] rounded-lg p-3">
+        <form onSubmit={handleLog} className="mt-3 space-y-3 bg-[#1e2812] border border-[#344a20] rounded-lg p-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Type</label>
@@ -181,7 +181,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
             </div>
           )}
           {form.type === 'drip' && (
-            <div className="text-[10px] text-stone-500 bg-[#0e1108] border border-[#2a3518] rounded px-2 py-1.5">
+            <div className="text-[10px] text-stone-500 bg-[#161e0c] border border-[#344a20] rounded px-2 py-1.5">
               Drip / subsurface — canopy readings unaffected, no hold-offs applied
             </div>
           )}
@@ -198,7 +198,7 @@ export default function IrrigationLog({ stationId, lastIrrigation, onLogged }: I
               {saving ? 'Logging…' : 'Log irrigation'}
             </button>
             <button type="button" onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-stone-200 border border-[#2a3518] hover:border-[#3d5020] transition-colors">
+              className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-stone-200 border border-[#344a20] hover:border-[#3d5020] transition-colors">
               Cancel
             </button>
           </div>

@@ -66,8 +66,8 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="farmer@property.com.au"
-                className="w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2.5 text-stone-100 text-sm
-                  placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/50
+                className="w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2.5 text-stone-100 text-sm
+                  placeholder:text-stone-500 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/50
                   transition-colors"
               />
             </div>
@@ -82,8 +82,8 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2.5 text-stone-100 text-sm
-                  placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/50
+                className="w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2.5 text-stone-100 text-sm
+                  placeholder:text-stone-500 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/50
                   transition-colors"
               />
             </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-stone-600 mt-6">
+        <p className="text-center text-xs text-stone-500 mt-6">
           Weather Wrangler · Australian Farm Weather Network
         </p>
       </div>

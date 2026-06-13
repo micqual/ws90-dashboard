@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
-      <body className="bg-[#0e1108] text-stone-100 antialiased min-h-screen">
+      <body className="bg-[#1a2310] text-stone-100 antialiased min-h-screen">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

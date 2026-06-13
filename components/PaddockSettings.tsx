@@ -55,17 +55,17 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
     }
   }
 
-  const inputCls = `w-full bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2 text-stone-100 text-sm
-    placeholder:text-stone-600 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30 transition-colors`
+  const inputCls = `w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm
+    placeholder:text-stone-500 focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30 transition-colors`
   const labelCls = 'block text-xs text-stone-500 mb-1.5 uppercase tracking-wider'
 
   return (
-    <div className="border-t border-[#2a3518] bg-[#111608] px-4 py-4">
+    <div className="border-t border-[#344a20] bg-[#1e2812] px-4 py-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-stone-300">Paddock Settings</h3>
         <button
           onClick={onClose}
-          className="text-stone-600 hover:text-stone-400 transition-colors"
+          className="text-stone-500 hover:text-stone-400 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -131,12 +131,12 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
                 value={form.growth_stage}
                 onChange={e => setForm(p => ({ ...p, growth_stage: e.target.value }))}
               />
-              <p className="text-[10px] text-stone-600 mt-1">
+              <p className="text-[10px] text-stone-500 mt-1">
                 Once planted date is set, growth stage is calculated automatically from GDD.
               </p>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-[10px] text-stone-600 bg-[#0e1108] border border-[#2a3518] rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 text-[10px] text-stone-500 bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2">
               <span>🌱</span>
               Growth stage is calculated automatically from GDD once planting date is past.
             </div>
@@ -161,7 +161,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
               type="button"
               onClick={onClose}
               className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-stone-200
-                border border-[#2a3518] hover:border-[#3d5020] transition-colors"
+                border border-[#344a20] hover:border-[#3d5020] transition-colors"
             >
               Cancel
             </button>

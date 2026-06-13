@@ -135,7 +135,7 @@ export default function DashboardPage() {
         <div className="card p-12 text-center">
           <div className="text-5xl mb-4">🌾</div>
           <h3 className="font-medium text-stone-300 mb-2">No paddocks assigned</h3>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-stone-500">
             Contact your administrator to assign weather stations to your account.
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="text-center text-xs text-stone-700 pt-2">
+      <div className="text-center text-xs text-stone-500 pt-2">
         Data refreshes every 5 minutes · Wind in km/h · Rain in mm
       </div>
     </div>

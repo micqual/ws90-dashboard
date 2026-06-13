@@ -14,7 +14,7 @@ export default function Navbar({ user }: { user: User }) {
   const pathname = usePathname()
 
   return (
-    <header className="border-b border-[#2a3518] bg-[#0e1108]/90 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b border-[#344a20] bg-[#161e0c]/90 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
@@ -56,7 +56,7 @@ export default function Navbar({ user }: { user: User }) {
         <div className="flex items-center gap-3 shrink-0">
           <div className="hidden sm:block text-right">
             <div className="text-xs font-medium text-stone-300 leading-tight">{user.name}</div>
-            <div className="text-xs text-stone-600">{user.role}</div>
+            <div className="text-xs text-stone-500">{user.role}</div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
