@@ -7,7 +7,7 @@ import { msToKmh } from '@/lib/units'
 
 interface WeatherChartProps {
   stationId: string
-  metric: 'temperature' | 'rain' | 'wind'
+  metric: 'temperature' | 'rain' | 'wind' | 'humidity'
 }
 
 export default function WeatherChart({ stationId, metric }: WeatherChartProps) {
@@ -24,6 +24,8 @@ export default function WeatherChart({ stationId, metric }: WeatherChartProps) {
             ? r.temperature_c
             : metric === 'rain'
             ? r.rain_mm
+            : metric === 'humidity'
+            ? r.humidity
             : msToKmh(r.wind_avg_ms),
         }))
         setData(chart)
@@ -41,13 +43,14 @@ export default function WeatherChart({ stationId, metric }: WeatherChartProps) {
   }
 
   if (!data.length) {
-    return <div className="h-16 flex items-center justify-center text-xs text-stone-500">No history</div>
+    return <div className="h-16 flex items-center justify-center text-xs text-stone-600">No history</div>
   }
 
-  const colors = {
+  const colors: Record<string, string> = {
     temperature: '#f97316',
     rain: '#3b82f6',
     wind: '#8b5cf6',
+    humidity: '#38bdf8',
   }
 
   return (
@@ -62,8 +65,8 @@ export default function WeatherChart({ stationId, metric }: WeatherChartProps) {
         <XAxis dataKey="time" hide />
         <Tooltip
           contentStyle={{
-            background: '#161d0e',
-            border: '1px solid #2a3518',
+            background: '#222e16',
+            border: '1px solid #344a20',
             borderRadius: '6px',
             fontSize: '11px',
             color: '#e7e5e4',

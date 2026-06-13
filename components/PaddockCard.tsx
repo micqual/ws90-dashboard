@@ -19,7 +19,7 @@ interface PaddockCardProps {
 
 export default function PaddockCard({ station: initialStation, tier }: PaddockCardProps) {
   const [station, setStation] = useState(initialStation)
-  const [showChart, setShowChart] = useState<'temperature' | 'rain' | 'wind' | null>(null)
+  const [showChart, setShowChart] = useState<'temperature' | 'rain' | 'wind' | 'humidity' | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [lastIrrigation, setLastIrrigation] = useState(initialStation.last_irrigation)
 
