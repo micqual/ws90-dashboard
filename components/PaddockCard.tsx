@@ -129,12 +129,19 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
               <div className="stat-value text-orange-400">{formatTemp(reading.temperature_c)}</div>
             </button>
 
-            <div className="bg-[#161e0c] border border-[#344a20] rounded-lg p-3">
+            <button
+              onClick={() => setShowChart(showChart === 'humidity' ? null : 'humidity')}
+              className={`rounded-lg p-3 text-left transition-colors border ${
+                showChart === 'humidity'
+                  ? 'bg-sky-950/40 border-sky-800/50'
+                  : 'bg-[#161e0c] border-[#344a20] hover:border-[#4a6a2c]'
+              }`}
+            >
               <div className="stat-label">Humidity</div>
-              <div className="stat-value text-sky-400 text-center w-full">
+              <div className="stat-value text-sky-400">
                 {reading.humidity != null ? `${reading.humidity.toFixed(0)}%` : '—'}
               </div>
-            </div>
+            </button>
 
             <button
               onClick={() => setShowChart(showChart === 'wind' ? null : 'wind')}
