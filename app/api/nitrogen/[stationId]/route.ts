@@ -57,10 +57,21 @@ export async function GET(request: Request, { params }: { params: { stationId: s
   const soilN = latestTest ? Number(latestTest.no3_n_kg_ha) + Number(latestTest.nh4_n_kg_ha ?? 0) : 0
   const appliedN = applications.reduce((sum: number, a: any) => sum + Number(a.n_kg_ha), 0)
 
+  // Leaching rates by soil type
+  const LEACH_RATES: Record<string, { high: number; mod: number; low: number }> = {
+    sand:        { high: 0.45, mod: 0.25, low: 0.10 },
+    'sandy loam':{ high: 0.35, mod: 0.20, low: 0.08 },
+    loam:        { high: 0.20, mod: 0.12, low: 0.05 },
+    'clay loam': { high: 0.12, mod: 0.08, low: 0.03 },
+    clay:        { high: 0.08, mod: 0.05, low: 0.02 },
+  }
+  const soilType = (station.soil_type ?? 'loam').toLowerCase()
+  const leachRate = LEACH_RATES[soilType] ?? LEACH_RATES.loam
+
   let leachingLoss = 0, leachingRisk = 'LOW'
-  if (seasonRainMm > 300) { leachingLoss = soilN * 0.30; leachingRisk = 'HIGH' }
-  else if (seasonRainMm > 150) { leachingLoss = soilN * 0.15; leachingRisk = 'MODERATE' }
-  else { leachingLoss = soilN * 0.05; leachingRisk = 'LOW' }
+  if (seasonRainMm > 300) { leachingLoss = soilN * leachRate.high; leachingRisk = 'HIGH' }
+  else if (seasonRainMm > 150) { leachingLoss = soilN * leachRate.mod; leachingRisk = 'MODERATE' }
+  else { leachingLoss = soilN * leachRate.low; leachingRisk = 'LOW' }
 
   let gddPercent = 0
   try {
@@ -94,7 +105,7 @@ export async function GET(request: Request, { params }: { params: { stationId: s
   const status = availableN < nForAvgYield * 0.6 ? 'DEFICIENT' : availableN < nForAvgYield * 0.85 ? 'MARGINAL' : 'SUFFICIENT'
 
   return NextResponse.json({
-    station: { id: station.id, paddock_name: station.paddock_name, crop_name: station.crop_type?.crop_name, planted_date: station.planted_date, hectares: station.hectares },
+    station: { id: station.id, paddock_name: station.paddock_name, crop_name: station.crop_type?.crop_name, planted_date: station.planted_date, hectares: station.hectares, soil_type: station.soil_type ?? 'loam' },
     balance: {
       soil_n: Math.round(soilN * 10) / 10, applied_n: Math.round(appliedN * 10) / 10,
       leaching_loss: Math.round(leachingLoss * 10) / 10, leaching_risk: leachingRisk,

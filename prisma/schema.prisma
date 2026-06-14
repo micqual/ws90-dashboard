@@ -45,6 +45,7 @@ model Station {
   crop_type_id        Int?
   planted_date        DateTime?
   growth_stage        String?
+  soil_type           String?   @default("loam")
   spray_wind_override Float?
   frost_temp_override Float?
   created_at          DateTime  @default(now())

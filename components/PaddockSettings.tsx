@@ -22,6 +22,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       ? format(new Date(station.planted_date), 'yyyy-MM-dd')
       : '',
     growth_stage: station.growth_stage ?? '',
+    soil_type: station.soil_type ?? 'loam',
   })
 
   const hasPlantedDate = !!form.planted_date
@@ -63,10 +64,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
     <div className="border-t border-[#344a20] bg-[#1e2812] px-4 py-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-stone-300">Paddock Settings</h3>
-        <button
-          onClick={onClose}
-          className="text-stone-500 hover:text-stone-400 transition-colors"
-        >
+        <button onClick={onClose} className="text-stone-500 hover:text-stone-400 transition-colors">
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
@@ -80,7 +78,6 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-3">
-          {/* Paddock name */}
           <div>
             <label className={labelCls}>Paddock Name</label>
             <input
@@ -92,7 +89,6 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
             />
           </div>
 
-          {/* Crop */}
           <div>
             <label className={labelCls}>Crop</label>
             <select
@@ -109,7 +105,6 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
             </select>
           </div>
 
-          {/* Planted date */}
           <div>
             <label className={labelCls}>Planted Date</label>
             <input
@@ -120,7 +115,21 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
             />
           </div>
 
-          {/* Growth stage — only show if no planted date yet */}
+          <div>
+            <label className={labelCls}>Soil Type</label>
+            <select
+              className={inputCls}
+              value={form.soil_type}
+              onChange={e => setForm(p => ({ ...p, soil_type: e.target.value }))}
+            >
+              <option value="sand">Sand</option>
+              <option value="sandy loam">Sandy Loam</option>
+              <option value="loam">Loam</option>
+              <option value="clay loam">Clay Loam</option>
+              <option value="clay">Clay</option>
+            </select>
+          </div>
+
           {!plantedInPast ? (
             <div>
               <label className={labelCls}>Growth Stage</label>
@@ -152,16 +161,14 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white
-                font-medium py-2 px-4 rounded-lg text-sm transition-colors"
+              className="flex-1 bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-stone-200
-                border border-[#344a20] hover:border-[#3d5020] transition-colors"
+              className="px-4 py-2 rounded-lg text-sm text-stone-400 hover:text-stone-200 border border-[#344a20] hover:border-[#3d5020] transition-colors"
             >
               Cancel
             </button>
