@@ -39,15 +39,26 @@ export async function GET() {
     let todayRain: any[] = []
 
     if (stationIds.length > 0) {
-      // Today's rainfall since midnight (Australian Central Time)
+      // Calculate today's rainfall from cumulative readings
+      // Sum positive differences between consecutive readings since midnight
       try {
         todayRain = await prisma.$queryRaw`
           SELECT
             station_id,
-            ROUND(MAX(rain_mm)::numeric, 2) AS rain_today_mm
-          FROM weather_readings
-          WHERE station_id = ANY(${stationIds}::text[])
-            AND created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Australia/Adelaide') AT TIME ZONE 'Australia/Adelaide'
+            ROUND(SUM(
+              CASE
+                WHEN rain_diff > 0 THEN rain_diff
+                ELSE 0
+              END
+            )::numeric, 2) AS rain_today_mm
+          FROM (
+            SELECT
+              station_id,
+              rain_mm - LAG(rain_mm) OVER (PARTITION BY station_id ORDER BY created_at) AS rain_diff
+            FROM weather_readings
+            WHERE station_id = ANY(${stationIds}::text[])
+              AND created_at >= DATE_TRUNC('day', NOW() AT TIME ZONE 'Australia/Adelaide') AT TIME ZONE 'Australia/Adelaide'
+          ) diffs
           GROUP BY station_id
         `
       } catch (e) {

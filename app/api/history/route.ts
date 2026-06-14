@@ -30,21 +30,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  // Calculate daily rainfall from cumulative readings using LAG
   const daily = await prisma.$queryRaw`
     SELECT
-      DATE(created_at AT TIME ZONE 'Australia/Adelaide') AS day,
-      ROUND(MAX(rain_mm)::numeric, 2) AS rain_total,
+      day,
+      ROUND(SUM(CASE WHEN rain_diff > 0 THEN rain_diff ELSE 0 END)::numeric, 2) AS rain_total,
       ROUND(MIN(temperature_c)::numeric, 1) AS temp_min,
       ROUND(MAX(temperature_c)::numeric, 1) AS temp_max,
       ROUND(AVG(temperature_c)::numeric, 1) AS temp_avg,
       ROUND(AVG(humidity)::numeric, 1) AS humidity_avg,
       ROUND(MAX(wind_avg_ms * 3.6)::numeric, 1) AS wind_max_kmh,
       COUNT(*) AS reading_count
-    FROM weather_readings
-    WHERE station_id = ${stationId}
-      AND created_at >= ${new Date(from)}
-      AND created_at <= ${new Date(to + 'T23:59:59')}
-    GROUP BY DATE(created_at AT TIME ZONE 'Australia/Adelaide')
+    FROM (
+      SELECT
+        DATE(created_at AT TIME ZONE 'Australia/Adelaide') AS day,
+        temperature_c,
+        humidity,
+        wind_avg_ms,
+        rain_mm - LAG(rain_mm) OVER (
+          PARTITION BY DATE(created_at AT TIME ZONE 'Australia/Adelaide')
+          ORDER BY created_at
+        ) AS rain_diff
+      FROM weather_readings
+      WHERE station_id = ${stationId}
+        AND created_at >= ${new Date(from)}
+        AND created_at <= ${new Date(to + 'T23:59:59')}
+    ) daily_diffs
+    GROUP BY day
     ORDER BY day ASC
   `
 
