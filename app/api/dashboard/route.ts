@@ -37,20 +37,14 @@ export async function GET() {
     let diseaseRisk: any[] = []
     let irrigationEvents: any[] = []
     let todayRain: any[] = []
+    let dryingConditions: any[] = []
 
     if (stationIds.length > 0) {
-      // Calculate today's rainfall from cumulative readings
-      // Sum positive differences between consecutive readings since midnight
       try {
         todayRain = await prisma.$queryRaw`
           SELECT
             station_id,
-            ROUND(SUM(
-              CASE
-                WHEN rain_diff > 0 THEN rain_diff
-                ELSE 0
-              END
-            )::numeric, 2) AS rain_today_mm
+            ROUND(SUM(CASE WHEN rain_diff > 0 THEN rain_diff ELSE 0 END)::numeric, 2) AS rain_today_mm
           FROM (
             SELECT
               station_id,
@@ -110,6 +104,15 @@ export async function GET() {
         } catch (e) {
           console.error('disease_risk view error:', e)
         }
+
+        try {
+          dryingConditions = await prisma.$queryRaw`
+            SELECT * FROM drying_conditions
+            WHERE station_id = ANY(${stationIds}::text[])
+          `
+        } catch (e) {
+          console.error('drying_conditions view error:', e)
+        }
       }
 
       try {
@@ -133,14 +136,12 @@ export async function GET() {
     const diseaseMap = Object.fromEntries(diseaseRisk.map((r: any) => [r.station_id, r]))
     const irrigationMap = Object.fromEntries(irrigationEvents.map((r: any) => [r.station_id, r]))
     const rainMap = Object.fromEntries(todayRain.map((r: any) => [r.station_id, Number(r.rain_today_mm ?? 0)]))
+    const dryingMap = Object.fromEntries(dryingConditions.map((r: any) => [r.station_id, r]))
 
     const result = stations.map(station => ({
       ...station,
       latest_reading: station.weather_readings[0]
-        ? {
-            ...station.weather_readings[0],
-            rain_mm: rainMap[station.id] ?? 0,
-          }
+        ? { ...station.weather_readings[0], rain_mm: rainMap[station.id] ?? 0 }
         : null,
       spray_condition: sprayMap[station.id] ?? null,
       gdd: gddMap[station.id] ?? null,
@@ -148,6 +149,7 @@ export async function GET() {
       harvest: harvestMap[station.id] ?? null,
       disease: diseaseMap[station.id] ?? null,
       last_irrigation: irrigationMap[station.id] ?? null,
+      drying: dryingMap[station.id] ?? null,
     }))
 
     return NextResponse.json({ stations: result, tier })

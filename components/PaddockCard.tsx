@@ -11,6 +11,7 @@ import PaddockSettings from './PaddockSettings'
 import HarvestBadge from './HarvestBadge'
 import DiseaseRisk from './DiseaseRisk'
 import IrrigationLog from './IrrigationLog'
+import DryingConditions from './DryingConditions'
 
 interface PaddockCardProps {
   station: any
@@ -30,6 +31,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
   const frost = station.frost
   const harvest = station.harvest
   const disease = station.disease
+  const drying = station.drying
   const isPro = tier === 'pro'
 
   const sprayStatus = spray?.status ?? spray?.spray_status ?? spray?.condition
@@ -233,6 +235,13 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
             <div className="pt-2 border-t border-[#344a20]">
               <div className="text-xs text-stone-500 mb-2 uppercase tracking-wider font-medium">Disease Risk</div>
               <DiseaseRisk disease={disease} cropName={crop?.crop_name} />
+            </div>
+          )}
+
+          {isPro && drying && (
+            <div className="pt-2 border-t border-[#344a20]">
+              <div className="text-xs text-stone-500 mb-2 uppercase tracking-wider font-medium">Drying Conditions</div>
+              <DryingConditions drying={drying} />
             </div>
           )}
 
