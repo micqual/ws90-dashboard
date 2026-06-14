@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function PATCH(
   request: Request,
   { params }: { params: { stationId: string } }
@@ -15,7 +17,6 @@ export async function PATCH(
   const farmerId = (session.user as any).id
   const { stationId } = params
 
-  // Verify the station belongs to this farmer
   const station = await prisma.station.findFirst({
     where: { id: stationId, farmer_id: farmerId },
   })
@@ -25,7 +26,7 @@ export async function PATCH(
   }
 
   const body = await request.json()
-  const { crop_type_id, planted_date, growth_stage, paddock_name, hectares } = body
+  const { crop_type_id, planted_date, growth_stage, paddock_name, hectares, soil_type } = body
 
   const updated = await prisma.station.update({
     where: { id: stationId },
@@ -35,6 +36,7 @@ export async function PATCH(
       growth_stage: growth_stage || null,
       paddock_name: paddock_name || station.paddock_name,
       hectares: hectares ? Number(hectares) : station.hectares,
+      soil_type: soil_type || station.soil_type || 'loam',
     },
     include: { crop_type: true },
   })
