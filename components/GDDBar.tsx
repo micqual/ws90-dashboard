@@ -1,99 +1,97 @@
+'use client'
+
 import { format, addDays } from 'date-fns'
 
 interface GDDBarProps {
-  current: number | null | undefined
-  target: number | null | undefined
+  gdd: any
   cropName?: string
-  plantedDate?: string | Date | null
-  stageName?: string | null
-  stageIcon?: string | null
-  zadoksCode?: string | null
 }
 
-export default function GDDBar({
-  current, target, cropName, plantedDate,
-  stageName, stageIcon, zadoksCode
-}: GDDBarProps) {
-  if (!target || target <= 0) {
-    return <div className="text-xs text-stone-500 italic">No GDD target set</div>
-  }
+export default function GDDBar({ gdd, cropName }: GDDBarProps) {
+  if (!gdd) return null
 
-  const gdd = current ?? 0
-  const pct = Math.min(100, Math.round((gdd / target) * 100))
+  const accumulated = Number(gdd.accumulated_gdd ?? 0)
+  const target = Number(gdd.target_gdd_harvest ?? 0)
+  const daysWithData = Number(gdd.days_with_data ?? 0)
+  const percent = target > 0 ? Math.min(100, (accumulated / target) * 100) : 0
 
-  let barColor = 'bg-field-600'
-  let textColor = 'text-field-400'
-  if (pct >= 90) {
-    barColor = 'bg-emerald-600'
-    textColor = 'text-emerald-400'
-  } else if (pct >= 60) {
-    barColor = 'bg-field-500'
-    textColor = 'text-field-300'
-  }
+  const stageName = gdd.stage_name ?? 'Unknown'
+  const stageIcon = gdd.stage_icon ?? '🌱'
+  const zadoks = gdd.zadoks_code
 
-  // Harvest window estimate
-  let harvestWindow: string | null = null
-  if (plantedDate && gdd > 0 && pct < 100) {
-    const planted = new Date(plantedDate)
-    const today = new Date()
-    const daysElapsed = Math.max(1, Math.round((today.getTime() - planted.getTime()) / (1000 * 60 * 60 * 24)))
-    const avgGddPerDay = gdd / daysElapsed
-    if (avgGddPerDay > 0) {
-      const daysRemaining = Math.round((target - gdd) / avgGddPerDay)
-      const earliest = addDays(today, Math.round(daysRemaining * 0.9))
-      const latest = addDays(today, Math.round(daysRemaining * 1.15))
-      harvestWindow = `${format(earliest, 'd MMM')} – ${format(latest, 'd MMM yyyy')}`
+  // Harvest window calculation — only show if 14+ days of data
+  const MIN_DAYS_FOR_ESTIMATE = 14
+  const hasEnoughData = daysWithData >= MIN_DAYS_FOR_ESTIMATE
+  const daysRemaining = MIN_DAYS_FOR_ESTIMATE - daysWithData
+
+  let harvestEarliest: Date | null = null
+  let harvestLatest: Date | null = null
+
+  if (hasEnoughData && target > 0 && accumulated > 0 && gdd.planted_date) {
+    const gddPerDay = accumulated / daysWithData
+    const gddRemaining = target - accumulated
+    const daysToHarvest = gddPerDay > 0 ? gddRemaining / gddPerDay : null
+
+    if (daysToHarvest && daysToHarvest > 0 && daysToHarvest < 500) {
+      const today = new Date()
+      harvestEarliest = addDays(today, Math.round(daysToHarvest * 0.9))
+      harvestLatest = addDays(today, Math.round(daysToHarvest * 1.15))
     }
   }
 
+  const barColor = percent >= 85
+    ? 'bg-amber-500'
+    : percent >= 50
+    ? 'bg-field-500'
+    : 'bg-field-600'
+
   return (
-    <div className="space-y-1.5">
-      {/* Stage badge + GDD values */}
+    <div className="space-y-2">
+      {/* Stage badge and GDD values */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-stone-500">GDD</span>
-          {stageName && (
-            <span className="inline-flex items-center gap-1 bg-[#161e0c] border border-[#344a20] rounded px-2 py-0.5 text-[10px] text-stone-300">
-              {stageIcon && <span>{stageIcon}</span>}
-              <span>{stageName}</span>
-              {zadoksCode && (
-                <span className="text-stone-500 font-mono ml-0.5">{zadoksCode}</span>
-              )}
-            </span>
-          )}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-stone-500 uppercase tracking-wider font-medium">GDD</span>
+          <span className="inline-flex items-center gap-1.5 bg-field-900/60 border border-field-700/50 text-field-300 text-xs font-medium px-2 py-0.5 rounded-md">
+            <span>{stageIcon}</span>
+            <span>{stageName}</span>
+            {zadoks && <span className="text-field-500 font-mono text-[10px]">{zadoks}</span>}
+          </span>
         </div>
-        <span className={`font-mono text-xs font-bold ${textColor}`}>
-          {Math.round(gdd).toLocaleString()} / {Math.round(target).toLocaleString()}
-          <span className="text-stone-500 font-normal ml-1">°Cd</span>
+        <span className="text-xs font-mono text-field-300">
+          <span className="text-field-200 font-bold">{Math.round(accumulated)}</span>
+          <span className="text-stone-500"> / {Math.round(target)} °Cd</span>
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-[#161e0c] rounded-full overflow-hidden border border-[#344a20]">
+      <div className="relative h-1.5 bg-[#1e2812] rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
-          style={{ width: `${pct}%` }}
+          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${percent}%` }}
         />
       </div>
 
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] text-stone-500">
-          {pct >= 90 ? '🌾 Near harvest' : `${pct}% to harvest`}
-        </span>
-        <span className="text-[10px] text-stone-500">
-          {target - gdd > 0 ? `${Math.round(target - gdd)} °Cd remaining` : 'Target reached'}
-        </span>
+      {/* Percent and remaining */}
+      <div className="flex items-center justify-between text-[10px] text-stone-600">
+        <span>{percent.toFixed(0)}% to harvest</span>
+        <span>{Math.round(target - accumulated)} °Cd remaining</span>
       </div>
 
-      {/* Harvest window */}
-      {harvestWindow && (
-        <div className="flex items-center gap-1.5 text-[10px] text-stone-500 bg-[#161e0c] border border-[#344a20] rounded px-2 py-1">
-          <svg className="w-3 h-3 text-field-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
-          </svg>
-          Est. harvest window: <span className="text-field-400 font-medium ml-1">{harvestWindow}</span>
+      {/* Harvest window or building data message */}
+      {hasEnoughData && harvestEarliest && harvestLatest ? (
+        <div className="flex items-center gap-2 bg-[#1e2812] border border-[#344a20] rounded-lg px-3 py-2 text-xs text-stone-400">
+          <span>📅</span>
+          <span>Est. harvest window:</span>
+          <span className="text-field-300 font-medium">
+            {format(harvestEarliest, 'd MMM')} – {format(harvestLatest, 'd MMM yyyy')}
+          </span>
         </div>
-      )}
+      ) : !hasEnoughData && target > 0 ? (
+        <div className="flex items-center gap-2 bg-[#1e2812] border border-[#344a20] rounded-lg px-3 py-2 text-xs text-stone-500">
+          <span>📊</span>
+          <span>Building data — harvest estimate available in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>
+        </div>
+      ) : null}
     </div>
   )
 }

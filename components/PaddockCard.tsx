@@ -219,13 +219,8 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
           {isPro && (gdd || crop?.target_gdd_harvest) && (
             <div className="pt-2 border-t border-[#344a20]">
               <GDDBar
-                current={gdd?.accumulated_gdd ?? gdd?.gdd_total ?? gdd?.gdd}
-                target={crop?.target_gdd_harvest}
+                gdd={gdd}
                 cropName={crop?.crop_name}
-                plantedDate={station.planted_date}
-                stageName={gdd?.stage_name}
-                stageIcon={gdd?.stage_icon}
-                zadoksCode={gdd?.zadoks_code}
               />
             </div>
           )}

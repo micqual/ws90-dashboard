@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { format } from 'date-fns'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, Legend,
+  CartesianGrid, Legend, ReferenceLine, LabelList,
 } from 'recharts'
 
 const N_PRODUCTS = [
@@ -19,6 +19,8 @@ const N_PRODUCTS = [
   { name: 'Chicken Manure', n_percent: 3.5 },
   { name: 'Other', n_percent: 0 },
 ]
+
+const DECILE_SHORT = ['D1 Very Low', 'D2-3 Low', 'D4-7 Average', 'D8-9 High', 'D10 Very High']
 
 export default function NitrogenPage() {
   const [stations, setStations] = useState<any[]>([])
@@ -144,12 +146,36 @@ export default function NitrogenPage() {
 
   const inputCls = `w-full bg-[#1e2812] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm focus:outline-none focus:border-field-500 transition-colors`
   const labelCls = 'block text-xs text-stone-500 mb-1.5 uppercase tracking-wider'
+
   const balance = data?.balance
-  const statusColor = balance?.status === 'SUFFICIENT'
-    ? 'text-emerald-400 border-emerald-700/50 bg-emerald-900/30'
-    : balance?.status === 'MARGINAL'
-    ? 'text-amber-400 border-amber-700/50 bg-amber-900/30'
-    : 'text-red-400 border-red-700/50 bg-red-900/30'
+  const availableN = balance?.available_n ?? 0
+
+  const statusStyles: Record<string, { card: string; badge: string }> = {
+    SUFFICIENT: {
+      card: 'bg-emerald-900/30 border-emerald-700/50',
+      badge: 'text-emerald-400 border-emerald-700/50 bg-emerald-900/30',
+    },
+    MARGINAL: {
+      card: 'bg-amber-900/30 border-amber-700/50',
+      badge: 'text-amber-400 border-amber-700/50 bg-amber-900/30',
+    },
+    DEFICIENT: {
+      card: 'bg-red-900/30 border-red-700/50',
+      badge: 'text-red-400 border-red-700/50 bg-red-900/30',
+    },
+  }
+
+  const currentStatus = balance?.status ?? 'SUFFICIENT'
+  const styles = statusStyles[currentStatus] ?? statusStyles.SUFFICIENT
+
+  // Chart data with short labels
+  const chartData = data?.decile_chart?.map((row: any, i: number) => ({
+    ...row,
+    label: DECILE_SHORT[i],
+  })) ?? []
+
+  // Total applied N this season
+  const totalApplied = data?.applications?.reduce((sum: number, a: any) => sum + Number(a.n_kg_ha), 0) ?? 0
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -158,6 +184,7 @@ export default function NitrogenPage() {
         <p className="text-sm text-stone-500 mt-0.5">N balance, yield potential and application history</p>
       </div>
 
+      {/* Controls */}
       <div className="card p-4">
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex-1 min-w-48">
@@ -169,10 +196,12 @@ export default function NitrogenPage() {
               ))}
             </select>
           </div>
-          <button onClick={() => setShowSoilForm(s => !s)} className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${showSoilForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
+          <button onClick={() => { setShowSoilForm(s => !s); setShowAppForm(false) }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${showSoilForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
             + Soil Test
           </button>
-          <button onClick={() => setShowAppForm(s => !s)} className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${showAppForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
+          <button onClick={() => { setShowAppForm(s => !s); setShowSoilForm(false) }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${showAppForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
             + Apply N
           </button>
         </div>
@@ -238,52 +267,130 @@ export default function NitrogenPage() {
 
       {!loading && data && (
         <>
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-stone-200">N Balance — {data.station.paddock_name || data.station.id}</h2>
-              {balance && <span className={`text-xs font-mono font-bold px-3 py-1.5 rounded-lg border ${statusColor}`}>{balance.status}</span>}
-            </div>
-            {balance && (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="bg-[#1e2812] rounded-lg p-3 border border-[#344a20]"><div className="text-xs text-stone-500 mb-1">Soil N (last test)</div><div className="font-mono text-lg font-bold text-field-300">{balance.soil_n} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div></div>
-                  <div className="bg-[#1e2812] rounded-lg p-3 border border-[#344a20]"><div className="text-xs text-stone-500 mb-1">Applied this season</div><div className="font-mono text-lg font-bold text-blue-400">{balance.applied_n} <span className="text-xs text-stone-500 font-normal">kg N/ha</span></div></div>
-                  <div className="bg-[#1e2812] rounded-lg p-3 border border-[#344a20]"><div className="text-xs text-stone-500 mb-1">Season rainfall</div><div className="font-mono text-lg font-bold text-sky-400">{balance.season_rain_mm} <span className="text-xs text-stone-500 font-normal">mm</span></div></div>
-                  <div className="bg-[#1e2812] rounded-lg p-3 border border-[#344a20]"><div className="text-xs text-stone-500 mb-1">Leaching loss ({balance.leaching_risk})</div><div className="font-mono text-lg font-bold text-red-400">-{balance.leaching_loss} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div></div>
-                  <div className="bg-[#1e2812] rounded-lg p-3 border border-[#344a20]"><div className="text-xs text-stone-500 mb-1">Crop uptake ({balance.gdd_percent}% GDD)</div><div className="font-mono text-lg font-bold text-amber-400">-{balance.crop_uptake} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div></div>
-                  <div className={`rounded-lg p-3 border ${statusColor}`}><div className="text-xs mb-1 opacity-75">Available N</div><div className="font-mono text-lg font-bold">{balance.available_n} <span className="text-xs font-normal opacity-75">kg N/ha</span></div></div>
+          {/* Headline N status */}
+          {balance && (
+            <div className={`card p-5 border ${styles.card}`}>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <div className="text-3xl font-bold font-mono text-stone-100">
+                    {balance.available_n} <span className="text-lg text-stone-400 font-normal">kg N/ha available</span>
+                  </div>
+                  <div className="text-sm text-stone-500 mt-1">
+                    {data.station.paddock_name || data.station.id}
+                    {data.station.soil_type && <span className="ml-2 capitalize">· {data.station.soil_type}</span>}
+                    {data.station.crop_name && <span className="ml-2">· {data.station.crop_name}</span>}
+                  </div>
+                  {/* Inline equation */}
+                  <div className="mt-3 text-xs text-stone-500 font-mono bg-[#1a2310] rounded-lg px-3 py-2 inline-flex flex-wrap gap-x-2 gap-y-1">
+                    <span className="text-field-300">{balance.soil_n} soil</span>
+                    <span>+</span>
+                    <span className="text-blue-400">{balance.applied_n} applied</span>
+                    <span>−</span>
+                    <span className="text-red-400">{balance.leaching_loss} leaching</span>
+                    <span>−</span>
+                    <span className="text-amber-400">{balance.crop_uptake} uptake</span>
+                    <span>=</span>
+                    <span className="text-stone-100 font-bold">{balance.available_n} kg N/ha</span>
+                  </div>
                 </div>
-                <div className="text-xs text-stone-600">N balance = Soil N + Applied N − Leaching Loss − Crop Uptake · Leaching estimated from season rainfall · Uptake estimated from GDD progress</div>
-              </>
-            )}
-            {!balance?.soil_n && <div className="text-sm text-stone-500 italic">No soil test recorded yet — add a soil test to see your N balance.</div>}
-          </div>
+                <span className={`text-sm font-mono font-bold px-3 py-1.5 rounded-lg border shrink-0 ${styles.badge}`}>
+                  {balance.status}
+                </span>
+              </div>
 
-          {data.decile_chart && (
+              {/* Stat tiles */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="bg-[#1a2310] rounded-lg p-3 border border-[#344a20]">
+                  <div className="text-xs text-stone-500 mb-1">Soil N (last test)</div>
+                  <div className="font-mono text-lg font-bold text-field-300">{balance.soil_n} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div>
+                </div>
+                <div className="bg-[#1a2310] rounded-lg p-3 border border-[#344a20]">
+                  <div className="text-xs text-stone-500 mb-1">Applied this season</div>
+                  <div className="font-mono text-lg font-bold text-blue-400">{balance.applied_n} <span className="text-xs text-stone-500 font-normal">kg N/ha</span></div>
+                </div>
+                <div className="bg-[#1a2310] rounded-lg p-3 border border-[#344a20]">
+                  <div className="text-xs text-stone-500 mb-1">Season rainfall</div>
+                  <div className="font-mono text-lg font-bold text-sky-400">{balance.season_rain_mm} <span className="text-xs text-stone-500 font-normal">mm</span></div>
+                </div>
+                <div className={`rounded-lg p-3 border ${balance.leaching_risk === 'HIGH' ? 'bg-red-900/20 border-red-800/40' : balance.leaching_risk === 'MODERATE' ? 'bg-amber-900/20 border-amber-800/40' : 'bg-[#1a2310] border-[#344a20]'}`}>
+                  <div className="text-xs text-stone-500 mb-1">Leaching loss
+                    <span className={`ml-1 font-bold ${balance.leaching_risk === 'HIGH' ? 'text-red-400' : balance.leaching_risk === 'MODERATE' ? 'text-amber-400' : 'text-stone-500'}`}>
+                      ({balance.leaching_risk})
+                    </span>
+                  </div>
+                  <div className="font-mono text-lg font-bold text-red-400">-{balance.leaching_loss} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div>
+                </div>
+                <div className="bg-[#1a2310] rounded-lg p-3 border border-[#344a20]">
+                  <div className="text-xs text-stone-500 mb-1">Crop uptake ({balance.gdd_percent}% GDD)</div>
+                  <div className="font-mono text-lg font-bold text-amber-400">-{balance.crop_uptake} <span className="text-xs text-stone-500 font-normal">kg/ha</span></div>
+                </div>
+                <div className={`rounded-lg p-3 border ${styles.card}`}>
+                  <div className="text-xs mb-1 opacity-75">Available N</div>
+                  <div className={`font-mono text-lg font-bold ${currentStatus === 'SUFFICIENT' ? 'text-emerald-400' : currentStatus === 'MARGINAL' ? 'text-amber-400' : 'text-red-400'}`}>
+                    {balance.available_n} <span className="text-xs font-normal opacity-75">kg N/ha</span>
+                  </div>
+                </div>
+              </div>
+
+              {!balance.soil_n && (
+                <div className="mt-3 text-sm text-stone-500 italic">No soil test recorded — add a soil test to see your N balance.</div>
+              )}
+
+              <div className="mt-3 text-xs text-stone-600">
+                Leaching adjusted for {data.station.soil_type ?? 'loam'} soil · Uptake estimated from GDD progress · Consult your agronomist for fertiliser decisions
+              </div>
+            </div>
+          )}
+
+          {/* Yield potential chart */}
+          {chartData.length > 0 && (
             <div className="card p-5">
               <h2 className="font-semibold text-stone-200 mb-1">Yield Potential by Rainfall Decile</h2>
-              <p className="text-xs text-stone-500 mb-4">t/ha — dark = unlimited N · light = current N supply</p>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={data.decile_chart} margin={{ top: 4, right: 8, bottom: 0, left: -10 }} barGap={2}>
+              <p className="text-xs text-stone-500 mb-4">t/ha — dark = unlimited N · light = current N supply · line = current N level</p>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={chartData} margin={{ top: 20, right: 8, bottom: 0, left: -10 }} barGap={2}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2a3c18" vertical={false} />
                   <XAxis dataKey="label" tick={{ fill: '#78716c', fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fill: '#78716c', fontSize: 10 }} tickLine={false} axisLine={false} unit=" t" />
-                  <Tooltip contentStyle={{ background: '#222e16', border: '1px solid #344a20', borderRadius: '8px', fontSize: '11px', color: '#e7e5e4' }} formatter={(val: any, name: any) => [`${Number(val).toFixed(1)} t/ha`, name === 'yield_potential' ? 'Unlimited N' : 'Current N']} />
+                  <YAxis tick={{ fill: '#78716c', fontSize: 10 }} tickLine={false} axisLine={false} unit=" t/ha" />
+                  <Tooltip
+                    contentStyle={{ background: '#222e16', border: '1px solid #344a20', borderRadius: '8px', fontSize: '11px', color: '#e7e5e4' }}
+                    formatter={(val: any, name: any) => [`${Number(val).toFixed(1)} t/ha`, name === 'yield_potential' ? 'Unlimited N' : 'Current N']}
+                  />
                   <Legend formatter={(v: any) => v === 'yield_potential' ? 'Unlimited N' : 'Current N'} wrapperStyle={{ fontSize: '11px', color: '#78716c' }} />
                   <Bar dataKey="yield_potential" fill="#166534" radius={[3, 3, 0, 0]} maxBarSize={60} />
-                  <Bar dataKey="yield_with_current_n" fill="#4ade80" radius={[3, 3, 0, 0]} maxBarSize={60} />
+                  <Bar dataKey="yield_with_current_n" fill="#4ade80" radius={[3, 3, 0, 0]} maxBarSize={60}>
+                    <LabelList
+                      dataKey="n_topup"
+                      position="top"
+                      formatter={(val: any) => val > 0 ? `+${val}kg` : '✓'}
+                      style={{ fill: '#a3a3a3', fontSize: '9px' }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+
+              {/* N top-up table */}
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b border-[#344a20]">{['Rainfall', 'Yield potential', 'With current N', 'N top-up needed'].map(h => <th key={h} className="px-3 py-2 text-left text-stone-500 uppercase tracking-wider">{h}</th>)}</tr></thead>
+                  <thead>
+                    <tr className="border-b border-[#344a20]">
+                      <th className="px-3 py-2 text-left text-stone-500 uppercase tracking-wider">Rainfall</th>
+                      <th className="px-3 py-2 text-right text-stone-500 uppercase tracking-wider">Potential</th>
+                      <th className="px-3 py-2 text-right text-stone-500 uppercase tracking-wider">With current N</th>
+                      <th className="px-3 py-2 text-right text-stone-500 uppercase tracking-wider">N top-up needed</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {data.decile_chart.map((row: any, i: number) => (
-                      <tr key={i} className={`border-b border-[#2a3c18] ${i % 2 === 0 ? '' : 'bg-[#1e2812]/40'}`}>
-                        <td className="px-3 py-2 text-stone-300">{row.label}</td>
+                    {chartData.map((row: any, i: number) => (
+                      <tr key={i} className={`border-b border-[#2a3c18] ${i === 2 ? 'bg-field-900/20' : i % 2 === 0 ? '' : 'bg-[#1e2812]/40'}`}>
+                        <td className={`px-3 py-2 ${i === 2 ? 'text-field-300 font-medium' : 'text-stone-300'}`}>
+                          {row.label}{i === 2 && <span className="ml-1 text-[10px] text-field-500">← most likely</span>}
+                        </td>
                         <td className="px-3 py-2 text-right font-mono text-stone-400">{row.yield_potential.toFixed(1)} t/ha</td>
                         <td className="px-3 py-2 text-right font-mono text-emerald-400">{row.yield_with_current_n.toFixed(1)} t/ha</td>
-                        <td className={`px-3 py-2 text-right font-mono ${row.n_topup > 0 ? 'text-amber-400' : 'text-stone-500'}`}>{row.n_topup > 0 ? `${row.n_topup} kg N/ha` : '—'}</td>
+                        <td className={`px-3 py-2 text-right font-mono ${row.n_topup > 0 ? 'text-amber-400' : 'text-emerald-500'}`}>
+                          {row.n_topup > 0 ? `${row.n_topup} kg N/ha` : '✓ Sufficient'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -292,6 +399,7 @@ export default function NitrogenPage() {
             </div>
           )}
 
+          {/* Soil test history */}
           {data.soil_tests?.length > 0 && (
             <div className="card overflow-hidden">
               <div className="card-header"><h2 className="font-semibold text-stone-200">Soil Test History</h2></div>
@@ -315,6 +423,7 @@ export default function NitrogenPage() {
             </div>
           )}
 
+          {/* Application history */}
           {data.applications?.length > 0 && (
             <div className="card overflow-hidden">
               <div className="card-header"><h2 className="font-semibold text-stone-200">Application History — This Season</h2></div>
@@ -332,6 +441,12 @@ export default function NitrogenPage() {
                         <td className="px-4 py-2.5 text-stone-500 text-xs">{a.notes || '—'}</td>
                       </tr>
                     ))}
+                    {/* Season total row */}
+                    <tr className="border-t-2 border-[#344a20] bg-[#1a2310]">
+                      <td className="px-4 py-2.5 text-stone-400 font-medium text-xs uppercase tracking-wider" colSpan={3}>Season total</td>
+                      <td className="px-4 py-2.5 font-mono text-blue-300 font-bold">{totalApplied.toFixed(1)} kg N/ha</td>
+                      <td colSpan={2} />
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -349,7 +464,7 @@ export default function NitrogenPage() {
       )}
 
       <div className="text-center text-xs text-stone-600 pb-2">
-        N balance is an estimate only · Consult your agronomist for fertiliser decisions
+        N balance is an estimate only · Leaching adjusted for soil type · Consult your agronomist for fertiliser decisions
       </div>
     </div>
   )
