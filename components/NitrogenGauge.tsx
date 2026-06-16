@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+
 interface NitrogenGaugeProps {
   availableN: number
   targetN: number
@@ -14,43 +16,8 @@ interface NitrogenGaugeProps {
 export default function NitrogenGauge({
   availableN, targetN, status, paddockName, cropName, nGap, selected, onClick
 }: NitrogenGaugeProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const pct = targetN > 0 ? Math.min(1.0, availableN / targetN) : 0
-
-  // Fixed geometry — viewBox large enough to contain full arc
-  const W = 200
-  const H = 120
-  const cx = W / 2        // 100
-  const cy = H - 10       // 110
-  const r = 80
-  const strokeW = 16
-
-  function polarToXY(angleDeg: number, radius: number) {
-    const rad = (angleDeg * Math.PI) / 180
-    return {
-      x: cx + radius * Math.cos(rad),
-      y: cy - radius * Math.sin(rad),
-    }
-  }
-
-  function arcPath(startDeg: number, endDeg: number, radius: number) {
-    const s = polarToXY(startDeg, radius)
-    const e = polarToXY(endDeg, radius)
-    const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0
-    return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${large} 0 ${e.x} ${e.y}`
-  }
-
-  // Angle mapping: 180° = left (0%), 0° = right (100%)
-  const pctToAngle = (p: number) => 180 - p * 180
-  const needleAngle = pctToAngle(Math.min(pct, 0.99))
-
-  const redEndAngle   = pctToAngle(0.60)   // 108°
-  const amberEndAngle = pctToAngle(0.85)   // 27°
-
-  // Needle geometry
-  const needleR = r - strokeW / 2 - 6
-  const tip = polarToXY(needleAngle, needleR)
-  const b1  = polarToXY(needleAngle + 90, 5)
-  const b2  = polarToXY(needleAngle - 90, 5)
 
   const statusColor = status === 'SUFFICIENT' ? '#4ade80'
     : status === 'MARGINAL' ? '#fbbf24'
@@ -58,6 +25,96 @@ export default function NitrogenGauge({
   const statusBg = status === 'SUFFICIENT' ? '#14532d'
     : status === 'MARGINAL' ? '#78350f'
     : '#7f1d1d'
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const W = canvas.width
+    const H = canvas.height
+    const cx = W / 2
+    const cy = H - 8
+    const r = H - 20
+    const sw = 16
+
+    ctx.clearRect(0, 0, W, H)
+
+    const pctToRad = (p: number) => Math.PI - p * Math.PI
+
+    // Track
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, Math.PI, 0, false)
+    ctx.strokeStyle = '#1a2a10'
+    ctx.lineWidth = sw
+    ctx.lineCap = 'butt'
+    ctx.stroke()
+
+    // Red zone 0-60%
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, Math.PI, pctToRad(0.6), false)
+    ctx.strokeStyle = '#7f1d1d'
+    ctx.lineWidth = sw
+    ctx.lineCap = 'butt'
+    ctx.stroke()
+
+    // Amber zone 60-85%
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, pctToRad(0.6), pctToRad(0.85), false)
+    ctx.strokeStyle = '#92400e'
+    ctx.lineWidth = sw
+    ctx.lineCap = 'butt'
+    ctx.stroke()
+
+    // Green zone 85-100%
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, pctToRad(0.85), 0, false)
+    ctx.strokeStyle = '#14532d'
+    ctx.lineWidth = sw
+    ctx.lineCap = 'butt'
+    ctx.stroke()
+
+    // Progress highlight
+    const safeAngle = pctToRad(Math.min(pct, 0.98))
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, Math.PI, safeAngle, false)
+    ctx.strokeStyle = statusColor
+    ctx.lineWidth = sw - 8
+    ctx.lineCap = 'round'
+    ctx.globalAlpha = 0.5
+    ctx.stroke()
+    ctx.globalAlpha = 1
+
+    // Needle
+    const na = safeAngle
+    const needleLen = r - sw / 2 - 4
+    const nx = cx + needleLen * Math.cos(na)
+    const ny = cy - needleLen * Math.sin(na)
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.lineTo(nx, ny)
+    ctx.strokeStyle = statusColor
+    ctx.lineWidth = 3
+    ctx.lineCap = 'round'
+    ctx.stroke()
+
+    // Hub
+    ctx.beginPath()
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2)
+    ctx.fillStyle = statusColor
+    ctx.fill()
+
+    // Value
+    ctx.fillStyle = statusColor
+    ctx.font = `bold 20px monospace`
+    ctx.textAlign = 'center'
+    ctx.fillText(String(availableN), cx, cy - 28)
+
+    ctx.fillStyle = '#78716c'
+    ctx.font = '9px sans-serif'
+    ctx.fillText('kg N/ha', cx, cy - 13)
+  }, [pct, availableN, statusColor])
 
   return (
     <button
@@ -68,39 +125,13 @@ export default function NitrogenGauge({
           : 'border-[#344a20] bg-[#1e2812] hover:border-field-600 hover:bg-[#222e16]'
       }`}
     >
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
-        {/* Background track */}
-        <path d={arcPath(180, 0, r)} fill="none" stroke="#1a2a10" strokeWidth={strokeW} strokeLinecap="butt" />
-        {/* Red zone: 0–60% */}
-        <path d={arcPath(180, redEndAngle, r)} fill="none" stroke="#7f1d1d" strokeWidth={strokeW} />
-        {/* Amber zone: 60–85% */}
-        <path d={arcPath(redEndAngle, amberEndAngle, r)} fill="none" stroke="#92400e" strokeWidth={strokeW} />
-        {/* Green zone: 85–100% */}
-        <path d={arcPath(amberEndAngle, 0, r)} fill="none" stroke="#14532d" strokeWidth={strokeW} />
-        {/* Progress highlight */}
-        <path
-          d={arcPath(180, needleAngle, r)}
-          fill="none"
-          stroke={statusColor}
-          strokeWidth={strokeW - 8}
-          strokeLinecap="round"
-          opacity="0.45"
-        />
-        {/* Needle */}
-        <polygon
-          points={`${tip.x},${tip.y} ${b1.x},${b1.y} ${b2.x},${b2.y}`}
-          fill={statusColor}
-        />
-        {/* Hub */}
-        <circle cx={cx} cy={cy} r={6} fill={statusColor} />
-        {/* Value text */}
-        <text x={cx} y={cy - 32} textAnchor="middle" fill={statusColor} fontSize="22" fontWeight="bold" fontFamily="monospace">
-          {availableN}
-        </text>
-        <text x={cx} y={cy - 14} textAnchor="middle" fill="#78716c" fontSize="9">
-          kg N/ha
-        </text>
-      </svg>
+      <canvas
+        ref={canvasRef}
+        width={200}
+        height={110}
+        className="w-full"
+        style={{ display: 'block' }}
+      />
 
       <div className="mt-2 text-center space-y-1">
         <div
