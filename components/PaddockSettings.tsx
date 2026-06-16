@@ -23,6 +23,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       : '',
     growth_stage: station.growth_stage ?? '',
     soil_type: station.soil_type ?? 'loam',
+    target_yield_t_ha: station.target_yield_t_ha?.toString() ?? '',
   })
 
   const hasPlantedDate = !!form.planted_date

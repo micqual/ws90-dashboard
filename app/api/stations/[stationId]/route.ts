@@ -26,7 +26,7 @@ export async function PATCH(
   }
 
   const body = await request.json()
-  const { crop_type_id, planted_date, growth_stage, paddock_name, hectares, soil_type } = body
+  const { crop_type_id, planted_date, growth_stage, paddock_name, hectares, soil_type, target_yield_t_ha } = body
 
   const updated = await prisma.station.update({
     where: { id: stationId },
@@ -37,6 +37,7 @@ export async function PATCH(
       paddock_name: paddock_name || station.paddock_name,
       hectares: hectares ? Number(hectares) : station.hectares,
       soil_type: soil_type || station.soil_type || 'loam',
+      target_yield_t_ha: target_yield_t_ha ? Number(target_yield_t_ha) : station.target_yield_t_ha,
     },
     include: { crop_type: true },
   })
