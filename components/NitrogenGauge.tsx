@@ -16,16 +16,20 @@ export default function NitrogenGauge({
 }: NitrogenGaugeProps) {
   const pct = targetN > 0 ? Math.min(1.0, availableN / targetN) : 0
 
-  const W = 180
-  const H = 100
-  const cx = W / 2
-  const cy = H - 8
-  const r = 70
-  const strokeW = 14
+  // Fixed geometry — viewBox large enough to contain full arc
+  const W = 200
+  const H = 120
+  const cx = W / 2        // 100
+  const cy = H - 10       // 110
+  const r = 80
+  const strokeW = 16
 
   function polarToXY(angleDeg: number, radius: number) {
     const rad = (angleDeg * Math.PI) / 180
-    return { x: cx + radius * Math.cos(rad), y: cy - radius * Math.sin(rad) }
+    return {
+      x: cx + radius * Math.cos(rad),
+      y: cy - radius * Math.sin(rad),
+    }
   }
 
   function arcPath(startDeg: number, endDeg: number, radius: number) {
@@ -35,22 +39,25 @@ export default function NitrogenGauge({
     return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${large} 0 ${e.x} ${e.y}`
   }
 
-  // angle: 180 = left (0%), 0 = right (100%)
+  // Angle mapping: 180° = left (0%), 0° = right (100%)
   const pctToAngle = (p: number) => 180 - p * 180
-  const needleAngle = pctToAngle(pct)
+  const needleAngle = pctToAngle(Math.min(pct, 0.99))
 
-  // Zone boundaries
-  const redEndAngle   = pctToAngle(0.60)  // 108°
-  const amberEndAngle = pctToAngle(0.85)  // 27°
+  const redEndAngle   = pctToAngle(0.60)   // 108°
+  const amberEndAngle = pctToAngle(0.85)   // 27°
 
-  // Needle
-  const needleR = r - strokeW - 2
+  // Needle geometry
+  const needleR = r - strokeW / 2 - 6
   const tip = polarToXY(needleAngle, needleR)
-  const b1  = polarToXY(needleAngle + 90, 4)
-  const b2  = polarToXY(needleAngle - 90, 4)
+  const b1  = polarToXY(needleAngle + 90, 5)
+  const b2  = polarToXY(needleAngle - 90, 5)
 
-  const statusColor = status === 'SUFFICIENT' ? '#4ade80' : status === 'MARGINAL' ? '#fbbf24' : '#f87171'
-  const statusBg    = status === 'SUFFICIENT' ? '#14532d' : status === 'MARGINAL' ? '#78350f' : '#7f1d1d'
+  const statusColor = status === 'SUFFICIENT' ? '#4ade80'
+    : status === 'MARGINAL' ? '#fbbf24'
+    : '#f87171'
+  const statusBg = status === 'SUFFICIENT' ? '#14532d'
+    : status === 'MARGINAL' ? '#78350f'
+    : '#7f1d1d'
 
   return (
     <button
@@ -61,31 +68,45 @@ export default function NitrogenGauge({
           : 'border-[#344a20] bg-[#1e2812] hover:border-field-600 hover:bg-[#222e16]'
       }`}
     >
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
-        {/* Track */}
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+        {/* Background track */}
         <path d={arcPath(180, 0, r)} fill="none" stroke="#1a2a10" strokeWidth={strokeW} strokeLinecap="butt" />
-        {/* Red zone 0-60% */}
+        {/* Red zone: 0–60% */}
         <path d={arcPath(180, redEndAngle, r)} fill="none" stroke="#7f1d1d" strokeWidth={strokeW} />
-        {/* Amber zone 60-85% */}
+        {/* Amber zone: 60–85% */}
         <path d={arcPath(redEndAngle, amberEndAngle, r)} fill="none" stroke="#92400e" strokeWidth={strokeW} />
-        {/* Green zone 85-100% */}
+        {/* Green zone: 85–100% */}
         <path d={arcPath(amberEndAngle, 0, r)} fill="none" stroke="#14532d" strokeWidth={strokeW} />
         {/* Progress highlight */}
-        <path d={arcPath(180, needleAngle, r)} fill="none" stroke={statusColor} strokeWidth={strokeW - 6} strokeLinecap="round" opacity="0.5" />
+        <path
+          d={arcPath(180, needleAngle, r)}
+          fill="none"
+          stroke={statusColor}
+          strokeWidth={strokeW - 8}
+          strokeLinecap="round"
+          opacity="0.45"
+        />
         {/* Needle */}
-        <polygon points={`${tip.x},${tip.y} ${b1.x},${b1.y} ${b2.x},${b2.y}`} fill={statusColor} />
+        <polygon
+          points={`${tip.x},${tip.y} ${b1.x},${b1.y} ${b2.x},${b2.y}`}
+          fill={statusColor}
+        />
         {/* Hub */}
-        <circle cx={cx} cy={cy} r={5} fill={statusColor} />
-        {/* Value */}
-        <text x={cx} y={cy - 28} textAnchor="middle" fill={statusColor} fontSize="20" fontWeight="bold" fontFamily="monospace">{availableN}</text>
-        <text x={cx} y={cy - 12} textAnchor="middle" fill="#78716c" fontSize="8">kg N/ha</text>
-        {/* Zone labels */}
-        <text x={14} y={cy + 2} fill="#7f1d1d" fontSize="7" textAnchor="middle">0%</text>
-        <text x={W - 14} y={cy + 2} fill="#14532d" fontSize="7" textAnchor="middle">100%</text>
+        <circle cx={cx} cy={cy} r={6} fill={statusColor} />
+        {/* Value text */}
+        <text x={cx} y={cy - 32} textAnchor="middle" fill={statusColor} fontSize="22" fontWeight="bold" fontFamily="monospace">
+          {availableN}
+        </text>
+        <text x={cx} y={cy - 14} textAnchor="middle" fill="#78716c" fontSize="9">
+          kg N/ha
+        </text>
       </svg>
 
-      <div className="mt-1 text-center space-y-1">
-        <div className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md inline-block" style={{ color: statusColor, background: statusBg }}>
+      <div className="mt-2 text-center space-y-1">
+        <div
+          className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md inline-block"
+          style={{ color: statusColor, background: statusBg }}
+        >
           {status}
         </div>
         <div className="text-xs font-medium text-stone-300 truncate">{paddockName}</div>
