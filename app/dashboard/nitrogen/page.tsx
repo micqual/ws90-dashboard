@@ -113,7 +113,7 @@ export default function NitrogenPage() {
   const inputCls = `w-full bg-[#1e2812] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm focus:outline-none focus:border-field-500 transition-colors`
   const labelCls = 'block text-xs text-stone-500 mb-1.5 uppercase tracking-wider'
   const balance = data?.balance
-  const currentStatus = balance?.status ?? 'SUFFICIENT'
+  const currentStatus = balance?.status ?? 'ON TRACK'
 
   const statusStyles: Record<string, { card: string; badge: string; text: string }> = {
     SUFFICIENT: { card: 'bg-emerald-900/30 border-emerald-700/50', badge: 'text-emerald-400 border-emerald-700/50 bg-emerald-900/30', text: 'text-emerald-400' },
@@ -126,9 +126,9 @@ export default function NitrogenPage() {
   const totalApplied = data?.applications?.reduce((sum: number, a: any) => sum + Number(a.n_kg_ha), 0) ?? 0
 
   // Farm summary stats
-  const deficient = overview.filter(s => s.status === 'DEFICIENT').length
-  const marginal = overview.filter(s => s.status === 'MARGINAL').length
-  const sufficient = overview.filter(s => s.status === 'SUFFICIENT').length
+  const deficient = overview.filter(s => s.status === 'NEEDS TOP-UP').length
+  const marginal = overview.filter(s => s.status === 'WATCH').length
+  const sufficient = overview.filter(s => s.status === 'ON TRACK').length
   const totalNGap = overview.reduce((sum, s) => sum + (s.n_gap * (s.hectares ?? 0)), 0)
 
   return (
@@ -143,9 +143,9 @@ export default function NitrogenPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-stone-200">Farm Overview</h2>
           <div className="flex gap-3 text-xs">
-            {sufficient > 0 && <span className="text-emerald-400">✓ {sufficient} sufficient</span>}
-            {marginal > 0 && <span className="text-amber-400">⚠ {marginal} marginal</span>}
-            {deficient > 0 && <span className="text-red-400">✕ {deficient} deficient</span>}
+            {sufficient > 0 && <span className="text-emerald-400">✓ {sufficient} on track</span>}
+            {marginal > 0 && <span className="text-amber-400">⚠ {marginal} watch</span>}
+            {deficient > 0 && <span className="text-red-400">✕ {deficient} needs top-up</span>}
           </div>
         </div>
 

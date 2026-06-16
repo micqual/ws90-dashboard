@@ -18,13 +18,11 @@ export default function NitrogenGauge({
 }: NitrogenGaugeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pct = targetN > 0 ? Math.min(1.0, availableN / targetN) : 0
+  const pctDisplay = Math.round(pct * 100)
 
-  const statusColor = status === 'SUFFICIENT' ? '#4ade80'
-    : status === 'MARGINAL' ? '#fbbf24'
+  const arcColor = pct >= 0.85 ? '#4ade80'
+    : pct >= 0.60 ? '#fbbf24'
     : '#f87171'
-  const statusBg = status === 'SUFFICIENT' ? '#14532d'
-    : status === 'MARGINAL' ? '#78350f'
-    : '#7f1d1d'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -35,9 +33,9 @@ export default function NitrogenGauge({
     const W = canvas.width
     const H = canvas.height
     const cx = W / 2
-    const cy = H - 8
-    const r = H - 20
-    const sw = 16
+    const cy = H - 4
+    const r = Math.round(H * 0.82)
+    const sw = 14
 
     ctx.clearRect(0, 0, W, H)
 
@@ -79,42 +77,42 @@ export default function NitrogenGauge({
     const safeAngle = pctToRad(Math.min(pct, 0.98))
     ctx.beginPath()
     ctx.arc(cx, cy, r, Math.PI, safeAngle, false)
-    ctx.strokeStyle = statusColor
-    ctx.lineWidth = sw - 8
+    ctx.strokeStyle = arcColor
+    ctx.lineWidth = sw - 6
     ctx.lineCap = 'round'
-    ctx.globalAlpha = 0.5
+    ctx.globalAlpha = 0.55
     ctx.stroke()
     ctx.globalAlpha = 1
 
     // Needle
-    const na = safeAngle
     const needleLen = r - sw / 2 - 4
-    const nx = cx + needleLen * Math.cos(na)
-    const ny = cy - needleLen * Math.sin(na)
+    const nx = cx + needleLen * Math.cos(safeAngle)
+    const ny = cy - needleLen * Math.sin(safeAngle)
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.lineTo(nx, ny)
-    ctx.strokeStyle = statusColor
-    ctx.lineWidth = 3
+    ctx.strokeStyle = arcColor
+    ctx.lineWidth = 2.5
     ctx.lineCap = 'round'
     ctx.stroke()
 
     // Hub
     ctx.beginPath()
-    ctx.arc(cx, cy, 5, 0, Math.PI * 2)
-    ctx.fillStyle = statusColor
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2)
+    ctx.fillStyle = arcColor
     ctx.fill()
 
-    // Value
-    ctx.fillStyle = statusColor
-    ctx.font = `bold 20px monospace`
+    // Percentage in centre
+    ctx.fillStyle = arcColor
+    ctx.font = `bold 22px monospace`
     ctx.textAlign = 'center'
-    ctx.fillText(String(availableN), cx, cy - 28)
+    ctx.fillText(`${pctDisplay}%`, cx, cy - 26)
 
     ctx.fillStyle = '#78716c'
     ctx.font = '9px sans-serif'
-    ctx.fillText('kg N/ha', cx, cy - 13)
-  }, [pct, availableN, statusColor])
+    ctx.fillText('of target N', cx, cy - 12)
+
+  }, [pct, pctDisplay, arcColor])
 
   return (
     <button
@@ -128,22 +126,16 @@ export default function NitrogenGauge({
       <canvas
         ref={canvasRef}
         width={200}
-        height={110}
+        height={90}
         className="w-full"
         style={{ display: 'block' }}
       />
 
-      <div className="mt-2 text-center space-y-1">
-        <div
-          className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md inline-block"
-          style={{ color: statusColor, background: statusBg }}
-        >
-          {status}
-        </div>
+      <div className="mt-1 text-center space-y-0.5">
         <div className="text-xs font-medium text-stone-300 truncate">{paddockName}</div>
         {cropName && <div className="text-[10px] text-stone-500">{cropName}</div>}
         {nGap && nGap > 0
-          ? <div className="text-[10px] text-red-400 font-medium">Need {nGap} kg N/ha</div>
+          ? <div className="text-[10px] font-medium" style={{ color: arcColor }}>Need {nGap} kg N/ha</div>
           : <div className="text-[10px] text-emerald-500">On track ✓</div>
         }
       </div>
