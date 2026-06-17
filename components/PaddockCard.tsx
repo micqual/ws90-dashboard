@@ -40,11 +40,7 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
   function handleSaved(updated: any) {
     setStation((prev: any) => ({
       ...prev,
-      paddock_name: updated.paddock_name,
-      crop_type: updated.crop_type,
-      crop_type_id: updated.crop_type_id,
-      planted_date: updated.planted_date,
-      growth_stage: updated.growth_stage,
+      ...updated,
     }))
     setShowSettings(false)
   }
