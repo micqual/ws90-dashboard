@@ -33,6 +33,9 @@ model Farmer {
   tier          String    @default("base")
   active        Boolean   @default(true)
   created_at    DateTime  @default(now())
+  agronomist_name    String?
+  agronomist_company String?
+  agronomist_phone   String?
   stations      Station[]
   @@map("farmers")
 }
@@ -47,6 +50,13 @@ model Station {
   growth_stage        String?
   soil_type           String?   @default("loam")
   target_yield_t_ha   Float?
+  farm_name           String?
+  farm_address        String?
+  latitude            Float?
+  longitude           Float?
+  elevation_m         Float?
+  installation_date   DateTime?
+  paddock_notes       String?
   spray_wind_override Float?
   frost_temp_override Float?
   created_at          DateTime  @default(now())
