@@ -32,8 +32,8 @@ export default function Navbar({ user }: { user: User }) {
           <Link href="/dashboard/history" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/dashboard/history' ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
             History
           </Link>
-          <Link href="/dashboard/nitrogen" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/dashboard/nitrogen' ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
-            Nitrogen
+          <Link href="/dashboard/agronomy" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/dashboard/agronomy' ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
+            Agronomy
           </Link>
           {user.role === 'admin' && (
             <Link href="/dashboard/admin" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname.startsWith('/dashboard/admin') ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>

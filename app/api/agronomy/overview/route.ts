@@ -20,11 +20,11 @@ const YIELD_BY_DECILE: Record<string, number[]> = {
 }
 
 const LEACH_RATES: Record<string, { high: number; mod: number; low: number }> = {
-  sand:          { high: 0.45, mod: 0.25, low: 0.10 },
-  'sandy loam':  { high: 0.35, mod: 0.20, low: 0.08 },
-  loam:          { high: 0.20, mod: 0.12, low: 0.05 },
-  'clay loam':   { high: 0.12, mod: 0.08, low: 0.03 },
-  clay:          { high: 0.08, mod: 0.05, low: 0.02 },
+  sand:         { high: 0.45, mod: 0.25, low: 0.10 },
+  'sandy loam': { high: 0.35, mod: 0.20, low: 0.08 },
+  loam:         { high: 0.20, mod: 0.12, low: 0.05 },
+  'clay loam':  { high: 0.12, mod: 0.08, low: 0.03 },
+  clay:         { high: 0.08, mod: 0.05, low: 0.02 },
 }
 
 export async function GET() {
@@ -44,14 +44,11 @@ export async function GET() {
       ? new Date(station.planted_date)
       : new Date(new Date().getFullYear(), 3, 1)
 
-    const soilTests = await prisma.$queryRaw`
+    const nTests = await prisma.$queryRaw`
       SELECT no3_n_kg_ha, nh4_n_kg_ha FROM nitrogen_soil_tests
-      WHERE station_id = ${station.id}
-      ORDER BY tested_at DESC LIMIT 1
+      WHERE station_id = ${station.id} ORDER BY tested_at DESC LIMIT 1
     ` as any[]
-    const soilN = soilTests[0]
-      ? Number(soilTests[0].no3_n_kg_ha) + Number(soilTests[0].nh4_n_kg_ha ?? 0)
-      : 0
+    const soilN = nTests[0] ? Number(nTests[0].no3_n_kg_ha) + Number(nTests[0].nh4_n_kg_ha ?? 0) : 0
 
     const apps = await prisma.$queryRaw`
       SELECT COALESCE(SUM(n_kg_ha), 0) AS total FROM nitrogen_applications
@@ -79,8 +76,7 @@ export async function GET() {
     let gddPercent = 0
     try {
       const gdd = await prisma.$queryRaw`
-        SELECT accumulated_gdd, target_gdd_harvest FROM growing_degree_days
-        WHERE station_id = ${station.id}
+        SELECT accumulated_gdd, target_gdd_harvest FROM growing_degree_days WHERE station_id = ${station.id}
       ` as any[]
       if (gdd[0]?.target_gdd_harvest > 0) {
         gddPercent = Math.min(100, (Number(gdd[0].accumulated_gdd) / Number(gdd[0].target_gdd_harvest)) * 100)
@@ -92,27 +88,23 @@ export async function GET() {
     ) ?? 'default'
     const nPerTonne = N_PER_TONNE[cropGroup]
     const yieldDeciles = YIELD_BY_DECILE[cropGroup] ?? YIELD_BY_DECILE.default
-    const targetYield = (station as any).target_yield_t_ha ?? yieldDeciles[2]
+    const targetYield = station.target_yield_t_ha ?? yieldDeciles[2]
     const targetN = targetYield * Math.abs(nPerTonne)
     const cropUptake = (gddPercent / 100) * targetYield * Math.abs(nPerTonne)
     const availableN = Math.max(0, soilN + appliedN - leachingLoss - cropUptake)
     const nGap = Math.max(0, targetN - availableN)
-
-    const status = availableN < targetN * 0.6 ? 'DEFICIENT'
-      : availableN < targetN * 0.85 ? 'MARGINAL'
-      : 'SUFFICIENT'
+    const pctOfTarget = targetN > 0 ? Math.min(1, availableN / targetN) : 0
 
     return {
       station_id: station.id,
       paddock_name: station.paddock_name || station.id,
       crop_name: station.crop_type?.crop_name,
-      soil_type: station.soil_type ?? 'loam',
+      soil_type: soilType,
       hectares: station.hectares,
       target_yield: targetYield,
-      target_n: Math.round(targetN),
       available_n: Math.round(availableN * 10) / 10,
       n_gap: Math.round(nGap),
-      status,
+      pct_of_target: pctOfTarget,
     }
   }))
 

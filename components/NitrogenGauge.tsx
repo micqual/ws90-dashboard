@@ -3,9 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 interface NitrogenGaugeProps {
-  availableN: number
-  targetN: number
-  status: 'SUFFICIENT' | 'MARGINAL' | 'DEFICIENT'
+  pctOfTarget: number
   paddockName: string
   cropName?: string
   nGap?: number
@@ -14,10 +12,10 @@ interface NitrogenGaugeProps {
 }
 
 export default function NitrogenGauge({
-  availableN, targetN, status, paddockName, cropName, nGap, selected, onClick
+  pctOfTarget, paddockName, cropName, nGap, selected, onClick
 }: NitrogenGaugeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pct = targetN > 0 ? Math.min(1.0, availableN / targetN) : 0
+  const pct = Math.min(1.0, Math.max(0, pctOfTarget))
   const pctDisplay = Math.round(pct * 100)
 
   const arcColor = pct >= 0.85 ? '#4ade80'
@@ -41,7 +39,6 @@ export default function NitrogenGauge({
 
     const pctToRad = (p: number) => Math.PI - p * Math.PI
 
-    // Track
     ctx.beginPath()
     ctx.arc(cx, cy, r, Math.PI, 0, false)
     ctx.strokeStyle = '#1a2a10'
@@ -49,7 +46,6 @@ export default function NitrogenGauge({
     ctx.lineCap = 'butt'
     ctx.stroke()
 
-    // Red zone 0-60%
     ctx.beginPath()
     ctx.arc(cx, cy, r, Math.PI, pctToRad(0.6), false)
     ctx.strokeStyle = '#7f1d1d'
@@ -57,7 +53,6 @@ export default function NitrogenGauge({
     ctx.lineCap = 'butt'
     ctx.stroke()
 
-    // Amber zone 60-85%
     ctx.beginPath()
     ctx.arc(cx, cy, r, pctToRad(0.6), pctToRad(0.85), false)
     ctx.strokeStyle = '#92400e'
@@ -65,7 +60,6 @@ export default function NitrogenGauge({
     ctx.lineCap = 'butt'
     ctx.stroke()
 
-    // Green zone 85-100%
     ctx.beginPath()
     ctx.arc(cx, cy, r, pctToRad(0.85), 0, false)
     ctx.strokeStyle = '#14532d'
@@ -73,7 +67,6 @@ export default function NitrogenGauge({
     ctx.lineCap = 'butt'
     ctx.stroke()
 
-    // Progress highlight
     const safeAngle = pctToRad(Math.min(pct, 0.98))
     ctx.beginPath()
     ctx.arc(cx, cy, r, Math.PI, safeAngle, false)
@@ -84,7 +77,6 @@ export default function NitrogenGauge({
     ctx.stroke()
     ctx.globalAlpha = 1
 
-    // Needle
     const needleLen = r - sw / 2 - 4
     const nx = cx + needleLen * Math.cos(safeAngle)
     const ny = cy - needleLen * Math.sin(safeAngle)
@@ -96,13 +88,11 @@ export default function NitrogenGauge({
     ctx.lineCap = 'round'
     ctx.stroke()
 
-    // Hub
     ctx.beginPath()
     ctx.arc(cx, cy, 4, 0, Math.PI * 2)
     ctx.fillStyle = arcColor
     ctx.fill()
 
-    // Percentage in centre
     ctx.fillStyle = arcColor
     ctx.font = `bold 22px monospace`
     ctx.textAlign = 'center'
