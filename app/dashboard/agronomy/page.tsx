@@ -189,6 +189,10 @@ export default function AgronomyPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${showNoteForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
                 + Note
               </button>
+              <a href={`/api/agronomy/${selectedStation}/pdf`} target="_blank"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-field-600 bg-field-800 text-field-200 hover:bg-field-700 transition-colors">
+                📄 Export PDF
+              </a>
             </div>
           </div>
 
