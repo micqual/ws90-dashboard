@@ -414,6 +414,21 @@ export default function AdminPage() {
                       {s.hectares && <div>{s.hectares} ha</div>}
                     </div>
                   </button>
+                  {(s as any).sim_phone_number && (
+                    <div className="mt-1 ml-1 text-[10px] text-stone-500">
+                      📱 {(s as any).sim_phone_number}{(s as any).sim_provider && ` · ${(s as any).sim_provider}`}
+                      {(s as any).sim_activation_date && (() => {
+                        const expiry = new Date(new Date((s as any).sim_activation_date).getTime() + 365 * 24 * 60 * 60 * 1000)
+                        const now = new Date()
+                        const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+                        return (
+                          <span className={daysLeft < 15 ? 'text-red-400' : daysLeft < 30 ? 'text-amber-400' : 'text-stone-500'}>
+                            {' · '}{daysLeft > 0 ? `${daysLeft}d left` : 'Expired'}
+                          </span>
+                        )
+                      })()}
+                    </div>
+                  )}
                   {(s as any).is_virtual && (
                     <div className="mt-1 ml-1">
                       {convertingId !== s.id ? (
