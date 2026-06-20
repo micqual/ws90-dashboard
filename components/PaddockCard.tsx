@@ -259,7 +259,30 @@ export default function PaddockCard({ station: initialStation, tier }: PaddockCa
                     <span className="font-mono text-stone-300">{Number(spray.temperature_c).toFixed(1)}°C</span>
                   </div>
                 )}
+                {spray.delta_t != null && (
+                  <div className={`flex justify-between rounded px-2 py-1 border ${
+                    spray.delta_t_zone === 'OPTIMAL' ? 'bg-emerald-950/40 border-emerald-800/50' :
+                    spray.delta_t_zone === 'MARGINAL' ? 'bg-amber-950/40 border-amber-800/50' :
+                    'bg-red-950/40 border-red-800/50'
+                  }`}>
+                    <span className="text-stone-500">Delta T</span>
+                    <span className={`font-mono font-bold ${
+                      spray.delta_t_zone === 'OPTIMAL' ? 'text-emerald-400' :
+                      spray.delta_t_zone === 'MARGINAL' ? 'text-amber-400' :
+                      'text-red-400'
+                    }`}>{Number(spray.delta_t).toFixed(1)}°C</span>
+                  </div>
+                )}
               </div>
+              {spray.delta_t_zone && (
+                <div className="text-[10px] text-stone-500 mt-1.5">
+                  Delta T: <span className="font-medium">{spray.delta_t_zone}</span>
+                  {spray.delta_t_zone === 'TOO HUMID' && ' — poor drying, runoff risk'}
+                  {spray.delta_t_zone === 'OPTIMAL' && ' — best spraying conditions'}
+                  {spray.delta_t_zone === 'MARGINAL' && ' — use coarser droplets'}
+                  {spray.delta_t_zone === 'TOO DRY' && ' — high evaporation, drift risk'}
+                </div>
+              )}
               {spray.reason && (
                 <div className="text-xs text-stone-500 mt-2 italic">{spray.reason}</div>
               )}

@@ -2,7 +2,7 @@
 -- These may already exist in your Railway database.
 -- Adjust column names to match your actual schema.
 
--- Spray conditions view
+-- Spray conditions view (includes Delta T)
 CREATE OR REPLACE VIEW spray_conditions AS
 SELECT
   s.id AS station_id,
@@ -10,6 +10,52 @@ SELECT
   wr.temperature_c,
   wr.humidity,
   wr.wind_avg_ms * 3.6 AS wind_speed_kmh,
+
+  -- Wet bulb temperature (Stull 2011 approximation)
+  ROUND((
+    wr.temperature_c * ATAN(0.151977 * SQRT(wr.humidity + 8.313659))
+    + ATAN(wr.temperature_c + wr.humidity)
+    - ATAN(wr.humidity - 1.676331)
+    + 0.00391838 * POWER(wr.humidity, 1.5) * ATAN(0.023101 * wr.humidity)
+    - 4.686035
+  )::numeric, 1) AS wet_bulb_c,
+
+  -- Delta T = dry bulb minus wet bulb
+  ROUND((
+    wr.temperature_c - (
+      wr.temperature_c * ATAN(0.151977 * SQRT(wr.humidity + 8.313659))
+      + ATAN(wr.temperature_c + wr.humidity)
+      - ATAN(wr.humidity - 1.676331)
+      + 0.00391838 * POWER(wr.humidity, 1.5) * ATAN(0.023101 * wr.humidity)
+      - 4.686035
+    )
+  )::numeric, 1) AS delta_t,
+
+  CASE
+    WHEN wr.temperature_c - (
+      wr.temperature_c * ATAN(0.151977 * SQRT(wr.humidity + 8.313659))
+      + ATAN(wr.temperature_c + wr.humidity)
+      - ATAN(wr.humidity - 1.676331)
+      + 0.00391838 * POWER(wr.humidity, 1.5) * ATAN(0.023101 * wr.humidity)
+      - 4.686035
+    ) < 2 THEN 'TOO HUMID'
+    WHEN wr.temperature_c - (
+      wr.temperature_c * ATAN(0.151977 * SQRT(wr.humidity + 8.313659))
+      + ATAN(wr.temperature_c + wr.humidity)
+      - ATAN(wr.humidity - 1.676331)
+      + 0.00391838 * POWER(wr.humidity, 1.5) * ATAN(0.023101 * wr.humidity)
+      - 4.686035
+    ) <= 8 THEN 'OPTIMAL'
+    WHEN wr.temperature_c - (
+      wr.temperature_c * ATAN(0.151977 * SQRT(wr.humidity + 8.313659))
+      + ATAN(wr.temperature_c + wr.humidity)
+      - ATAN(wr.humidity - 1.676331)
+      + 0.00391838 * POWER(wr.humidity, 1.5) * ATAN(0.023101 * wr.humidity)
+      - 4.686035
+    ) <= 10 THEN 'MARGINAL'
+    ELSE 'TOO DRY'
+  END AS delta_t_zone,
+
   CASE
     WHEN wr.wind_avg_ms * 3.6 > COALESCE(s.spray_wind_override, ct.spray_wind_limit_kmh, 15) THEN 'NOT SUITABLE'
     WHEN wr.humidity > COALESCE(ct.spray_humidity_max, 95) THEN 'NOT SUITABLE'
