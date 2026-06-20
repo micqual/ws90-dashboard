@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+
+const StationHealthMap = dynamic(() => import('@/components/StationHealthMap'), { ssr: false })
 
 interface Farmer {
   id: string
@@ -29,7 +32,7 @@ export default function AdminPage() {
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [stations, setStations] = useState<Station[]>([])
   const [cropTypes, setCropTypes] = useState<CropType[]>([])
-  const [activeTab, setActiveTab] = useState<'farmers' | 'stations'>('farmers')
+  const [activeTab, setActiveTab] = useState<'farmers' | 'stations' | 'map'>('farmers')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -193,7 +196,7 @@ export default function AdminPage() {
       )}
 
       <div className="flex gap-1 border-b border-[#344a20]">
-        {(['farmers', 'stations'] as const).map(tab => (
+        {(['farmers', 'stations', 'map'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -506,6 +509,13 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'map' && (
+        <div className="card p-5">
+          <h2 className="font-semibold text-stone-200 mb-4">Station Health Map</h2>
+          <StationHealthMap stations={stations} />
         </div>
       )}
     </div>
