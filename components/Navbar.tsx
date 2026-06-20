@@ -35,6 +35,9 @@ export default function Navbar({ user }: { user: User }) {
           <Link href="/dashboard/agronomy" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/dashboard/agronomy' ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
             Agronomy
           </Link>
+          <Link href="/dashboard/methodology" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/dashboard/methodology' ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
+            Methodology
+          </Link>
           {user.role === 'admin' && (
             <Link href="/dashboard/admin" className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname.startsWith('/dashboard/admin') ? 'bg-field-800 text-field-200' : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'}`}>
               Admin
