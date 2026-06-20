@@ -3,5 +3,11 @@
     "app/api/agronomy/[stationId]/pdf/route.ts": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/bom",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }
