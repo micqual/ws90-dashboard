@@ -138,6 +138,8 @@ export async function GET() {
     const rainMap = Object.fromEntries(todayRain.map((r: any) => [r.station_id, Number(r.rain_today_mm ?? 0)]))
     const dryingMap = Object.fromEntries(dryingConditions.map((r: any) => [r.station_id, r]))
 
+    const farmer = await prisma.farmer.findUnique({ where: { id: farmerId } })
+
     const result = stations.map(station => ({
       ...station,
       latest_reading: station.weather_readings[0]
@@ -150,6 +152,9 @@ export async function GET() {
       disease: diseaseMap[station.id] ?? null,
       last_irrigation: irrigationMap[station.id] ?? null,
       drying: dryingMap[station.id] ?? null,
+      agronomist_name: farmer?.agronomist_name,
+      agronomist_company: farmer?.agronomist_company,
+      agronomist_phone: farmer?.agronomist_phone,
     }))
 
     return NextResponse.json({ stations: result, tier })

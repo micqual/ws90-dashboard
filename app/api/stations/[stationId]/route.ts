@@ -30,6 +30,7 @@ export async function PATCH(
     crop_type_id, planted_date, growth_stage, paddock_name, hectares,
     soil_type, target_yield_t_ha, farm_name, farm_address,
     latitude, longitude, elevation_m, installation_date, paddock_notes,
+    agronomist_name, agronomist_company, agronomist_phone,
   } = body
 
   const updated = await prisma.station.update({
@@ -53,5 +54,24 @@ export async function PATCH(
     include: { crop_type: true },
   })
 
-  return NextResponse.json(updated)
+  // Agronomist details live on the farmer record, applies across all paddocks
+  if (agronomist_name || agronomist_company || agronomist_phone) {
+    await prisma.farmer.update({
+      where: { id: farmerId },
+      data: {
+        agronomist_name: agronomist_name || undefined,
+        agronomist_company: agronomist_company || undefined,
+        agronomist_phone: agronomist_phone || undefined,
+      },
+    })
+  }
+
+  const farmer = await prisma.farmer.findUnique({ where: { id: farmerId } })
+
+  return NextResponse.json({
+    ...updated,
+    agronomist_name: farmer?.agronomist_name,
+    agronomist_company: farmer?.agronomist_company,
+    agronomist_phone: farmer?.agronomist_phone,
+  })
 }
