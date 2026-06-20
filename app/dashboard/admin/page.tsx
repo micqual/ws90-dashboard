@@ -33,6 +33,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [convertingId, setConvertingId] = useState<string | null>(null)
+  const [convertStationId, setConvertStationId] = useState('')
+  const [converting, setConverting] = useState(false)
+  const [convertError, setConvertError] = useState('')
 
   const [farmerForm, setFarmerForm] = useState({ name: '', email: '', password: '', tier: 'base' })
   const [stationForm, setStationForm] = useState({
@@ -52,6 +56,31 @@ export default function AdminPage() {
       setCropTypes(Array.isArray(c) ? c : [])
     }).finally(() => setLoading(false))
   }, [])
+
+  async function handleConvertStation(virtualStationId: string) {
+    if (!convertStationId.trim()) {
+      setConvertError('Enter the new station ID')
+      return
+    }
+    setConverting(true)
+    setConvertError('')
+    try {
+      const res = await fetch(`/api/stations/${virtualStationId}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_station_id: convertStationId.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setStations(prev => prev.map(s => s.id === virtualStationId ? data : s))
+      setConvertingId(null)
+      setMessage({ type: 'success', text: `Converted to station "${data.id}"` })
+    } catch (err: any) {
+      setConvertError(err.message)
+    } finally {
+      setConverting(false)
+    }
+  }
 
   async function createFarmer(e: React.FormEvent) {
     e.preventDefault()
@@ -366,22 +395,67 @@ export default function AdminPage() {
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {stations.length === 0 && <div className="text-sm text-stone-500">No stations yet</div>}
               {stations.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '' }))}
-                  className="w-full flex items-start justify-between gap-2 bg-[#161e0c] hover:bg-[#222e16] rounded-lg px-3 py-2.5 border border-[#344a20] text-left transition-colors"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-stone-200">{s.paddock_name || s.id}</div>
-                    <div className="text-xs text-stone-500">
-                      {s.id}{s.crop_type && ` · ${s.crop_type.crop_name}`}
+                <div key={s.id}>
+                  <button
+                    onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '' }))}
+                    className="w-full flex items-start justify-between gap-2 bg-[#161e0c] hover:bg-[#222e16] rounded-lg px-3 py-2.5 border border-[#344a20] text-left transition-colors"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-stone-200 flex items-center gap-1.5">
+                        {s.paddock_name || s.id}
+                        {(s as any).is_virtual && <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-700/50">VIRTUAL</span>}
+                      </div>
+                      <div className="text-xs text-stone-500">
+                        {s.id}{s.crop_type && ` · ${s.crop_type.crop_name}`}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-xs text-stone-500 shrink-0 text-right">
-                    {s.farmer?.name || 'Unassigned'}
-                    {s.hectares && <div>{s.hectares} ha</div>}
-                  </div>
-                </button>
+                    <div className="text-xs text-stone-500 shrink-0 text-right">
+                      {s.farmer?.name || 'Unassigned'}
+                      {s.hectares && <div>{s.hectares} ha</div>}
+                    </div>
+                  </button>
+                  {(s as any).is_virtual && (
+                    <div className="mt-1 ml-1">
+                      {convertingId !== s.id ? (
+                        <button
+                          onClick={() => { setConvertingId(s.id); setConvertStationId(''); setConvertError('') }}
+                          className="text-[10px] text-field-400 hover:text-field-300 underline underline-offset-2"
+                        >
+                          📡 Convert to real WS90 station
+                        </button>
+                      ) : (
+                        <div className="bg-[#161e0c] border border-[#344a20] rounded-lg p-2.5 mt-1 space-y-2">
+                          <p className="text-[10px] text-stone-500">Enter the new WS90&apos;s device ID. It must have already sent at least one reading.</p>
+                          <input
+                            type="text"
+                            placeholder="e.g. WS90_A1B2C3"
+                            value={convertStationId}
+                            onChange={e => setConvertStationId(e.target.value)}
+                            className="w-full bg-[#1a2310] border border-[#344a20] rounded-lg px-2.5 py-1.5 text-xs text-stone-100 focus:outline-none focus:border-field-500"
+                          />
+                          {convertError && (
+                            <div className="text-[10px] text-red-400 bg-red-950/40 border border-red-900/50 rounded px-2 py-1">{convertError}</div>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              disabled={converting}
+                              onClick={() => handleConvertStation(s.id)}
+                              className="flex-1 bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-1.5 px-3 rounded-lg text-xs"
+                            >
+                              {converting ? 'Converting…' : 'Convert Now'}
+                            </button>
+                            <button
+                              onClick={() => setConvertingId(null)}
+                              className="px-3 py-1.5 rounded-lg text-xs text-stone-400 border border-[#344a20]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>

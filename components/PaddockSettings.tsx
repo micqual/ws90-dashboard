@@ -16,10 +16,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
   const [error, setError] = useState('')
   const [showLocation, setShowLocation] = useState(false)
   const [showFarmDetails, setShowFarmDetails] = useState(false)
-  const [showConvert, setShowConvert] = useState(false)
-  const [newStationId, setNewStationId] = useState('')
-  const [converting, setConverting] = useState(false)
-  const [convertError, setConvertError] = useState('')
+
 
   const [form, setForm] = useState({
     paddock_name: station.paddock_name ?? '',
@@ -72,29 +69,6 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       setError(err.message)
     } finally {
       setSaving(false)
-    }
-  }
-
-  async function handleConvert() {
-    if (!newStationId.trim()) {
-      setConvertError('Enter the new station ID')
-      return
-    }
-    setConverting(true)
-    setConvertError('')
-    try {
-      const res = await fetch(`/api/stations/${station.id}/convert`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_station_id: newStationId.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to convert')
-      onSaved(data)
-    } catch (err: any) {
-      setConvertError(err.message)
-    } finally {
-      setConverting(false)
     }
   }
 
@@ -262,36 +236,8 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
           </div>
 
           {station.is_virtual && (
-            <div className="border-t border-[#344a20] pt-3">
-              <div className="text-xs text-stone-400 uppercase tracking-wider font-medium mb-2">Convert to Real Station</div>
-              {!showConvert ? (
-                <button type="button" onClick={() => setShowConvert(true)}
-                  className="w-full text-sm text-field-300 border border-field-600 bg-field-900/30 hover:bg-field-800/50 px-3 py-2 rounded-lg transition-colors">
-                  📡 This paddock now has a WS90 installed
-                </button>
-              ) : (
-                <div className="space-y-2 bg-[#161e0c] border border-[#344a20] rounded-lg p-3">
-                  <p className="text-[10px] text-stone-500">
-                    Enter the new WS90&apos;s device ID. It must have already sent at least one reading.
-                    All soil tests, applications and notes will move across automatically.
-                  </p>
-                  <input type="text" className={inputCls} placeholder="e.g. WS90_A1B2C3"
-                    value={newStationId} onChange={e => setNewStationId(e.target.value)} />
-                  {convertError && (
-                    <div className="text-xs text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-2 py-1.5">{convertError}</div>
-                  )}
-                  <div className="flex gap-2">
-                    <button type="button" disabled={converting} onClick={handleConvert}
-                      className="flex-1 bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-1.5 px-3 rounded-lg text-xs transition-colors">
-                      {converting ? 'Converting…' : 'Convert Now'}
-                    </button>
-                    <button type="button" onClick={() => { setShowConvert(false); setConvertError('') }}
-                      className="px-3 py-1.5 rounded-lg text-xs text-stone-400 border border-[#344a20]">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="bg-amber-950/30 border border-amber-800/40 rounded-lg px-3 py-2 text-xs text-amber-300">
+              📡 This is a virtual paddock with no WS90 installed. Ask your administrator to convert it once a station is ready.
             </div>
           )}
 
