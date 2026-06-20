@@ -132,14 +132,29 @@ export async function GET(
   } catch (e) {}
 
   let seasonRainMm = 0
+  let ws90RainMm = 0
+  let manualRainMm = 0
+  let manualRainEvents: any[] = []
+
   try {
     const rain = await prisma.$queryRaw`
       SELECT COALESCE(SUM(CASE WHEN rain_diff > 0 THEN rain_diff ELSE 0 END), 0) AS season_rain
       FROM (SELECT rain_mm - LAG(rain_mm) OVER (ORDER BY created_at) AS rain_diff
             FROM weather_readings WHERE station_id = ${stationId} AND created_at >= ${seasonStart}) d
     ` as any[]
-    seasonRainMm = Number(rain[0]?.season_rain ?? 0)
+    ws90RainMm = Number(rain[0]?.season_rain ?? 0)
   } catch (e) {}
+
+  try {
+    manualRainEvents = await prisma.$queryRaw`
+      SELECT * FROM manual_rain_events
+      WHERE station_id = ${stationId} AND event_date >= ${seasonStart}
+      ORDER BY event_date ASC
+    ` as any[]
+    manualRainMm = manualRainEvents.reduce((sum, e) => sum + Number(e.amount_mm), 0)
+  } catch (e) {}
+
+  seasonRainMm = ws90RainMm + manualRainMm
 
   let gddPercent = 0
   let stageName = ''
@@ -295,6 +310,8 @@ export async function GET(
       crop_uptake: Math.round(cropUptake * 10) / 10,
       available_n: Math.round(availableN * 10) / 10,
       season_rain_mm: Math.round(seasonRainMm * 10) / 10,
+      ws90_rain_mm: Math.round(ws90RainMm * 10) / 10,
+      manual_rain_mm: Math.round(manualRainMm * 10) / 10,
       target_n: Math.round(targetN),
       n_gap: Math.round(nGap),
       pct_of_target: Math.round(pctOfTarget * 100),
@@ -313,6 +330,7 @@ export async function GET(
       critical_threshold: sCritical,
       is_limiting: sulphurValue !== null && sulphurValue < sCritical,
     },
+    manual_rain_events: manualRainEvents.map(e => ({ ...e, id: Number(e.id) })),
     decile_chart: decileChart,
     soil_tests: nTests.map(t => ({ ...t, id: Number(t.id) })),
     phosphorus_tests: pTests.map(t => ({ ...t, id: Number(t.id) })),

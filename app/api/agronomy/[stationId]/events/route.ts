@@ -61,5 +61,15 @@ export async function POST(
     return NextResponse.json(result[0])
   }
 
+  if (type === 'manual_rain') {
+    const { event_date, amount_mm, notes } = body
+    const result = await prisma.$queryRaw`
+      INSERT INTO manual_rain_events (station_id, event_date, amount_mm, notes)
+      VALUES (${stationId}, ${new Date(event_date)}, ${Number(amount_mm)}, ${notes || null})
+      RETURNING *
+    ` as any[]
+    return NextResponse.json(result[0])
+  }
+
   return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
 }

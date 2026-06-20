@@ -29,6 +29,7 @@ export default function AgronomyPage() {
   const [showPForm, setShowPForm] = useState(false)
   const [showAppForm, setShowAppForm] = useState(false)
   const [showNoteForm, setShowNoteForm] = useState(false)
+  const [showRainForm, setShowRainForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -46,6 +47,7 @@ export default function AgronomyPage() {
     incorporated: false,
   })
   const [noteForm, setNoteForm] = useState({ author_name: '', note: '', visible_to_farmer: true })
+  const [rainForm, setRainForm] = useState({ event_date: format(new Date(), 'yyyy-MM-dd'), amount_mm: '', notes: '' })
 
   useEffect(() => {
     fetch('/api/agronomy/overview')
@@ -182,13 +184,17 @@ export default function AgronomyPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${showPForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
                 + P Test
               </button>
-              <button onClick={() => { setShowAppForm(s => !s); setShowNForm(false); setShowPForm(false); setShowNoteForm(false) }}
+              <button onClick={() => { setShowAppForm(s => !s); setShowNForm(false); setShowPForm(false); setShowNoteForm(false); setShowRainForm(false) }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${showAppForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
                 + Apply N
               </button>
-              <button onClick={() => { setShowNoteForm(s => !s); setShowNForm(false); setShowPForm(false); setShowAppForm(false) }}
+              <button onClick={() => { setShowNoteForm(s => !s); setShowNForm(false); setShowPForm(false); setShowAppForm(false); setShowRainForm(false) }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${showNoteForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
                 + Note
+              </button>
+              <button onClick={() => { setShowRainForm(s => !s); setShowNForm(false); setShowPForm(false); setShowAppForm(false); setShowNoteForm(false) }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${showRainForm ? 'bg-field-800 border-field-600 text-field-200' : 'border-[#344a20] text-stone-400 hover:text-stone-200'}`}>
+                + Manual Rain
               </button>
               <a href={`/api/agronomy/${selectedStation}/pdf`} target="_blank"
                 className="px-3 py-1.5 rounded-lg text-xs font-medium border border-field-600 bg-field-800 text-field-200 hover:bg-field-700 transition-colors">
@@ -287,6 +293,24 @@ export default function AgronomyPage() {
             </form>
           )}
 
+          {/* Manual Rain Form */}
+          {showRainForm && (
+            <form onSubmit={e => { e.preventDefault(); submitForm('manual_rain', rainForm, () => setRainForm({ event_date: format(new Date(), 'yyyy-MM-dd'), amount_mm: '', notes: '' }), () => setShowRainForm(false)) }}
+              className="mb-4 border border-[#344a20] rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-medium text-stone-300">Add Manual Rain Entry</h3>
+              <p className="text-[10px] text-stone-500">Use this for rainfall before the WS90 was installed, or to correct gaps in sensor data. Enter a single lump-sum total or multiple dated entries.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>Date</label><input type="date" className={inputCls} required value={rainForm.event_date} onChange={e => setRainForm(p => ({ ...p, event_date: e.target.value }))} /></div>
+                <div><label className={labelCls}>Amount (mm)</label><input type="number" step="0.1" className={inputCls} required placeholder="e.g. 85 for a season lump sum" value={rainForm.amount_mm} onChange={e => setRainForm(p => ({ ...p, amount_mm: e.target.value }))} /></div>
+              </div>
+              <div><label className={labelCls}>Notes</label><input type="text" className={inputCls} placeholder="e.g. Rain before WS90 installed" value={rainForm.notes} onChange={e => setRainForm(p => ({ ...p, notes: e.target.value }))} /></div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={saving} className="bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm">{saving ? 'Saving…' : 'Save'}</button>
+                <button type="button" onClick={() => setShowRainForm(false)} className="px-4 py-2 rounded-lg text-sm text-stone-400 border border-[#344a20]">Cancel</button>
+              </div>
+            </form>
+          )}
+
           {/* Two column: curve + balance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div>
@@ -334,7 +358,13 @@ export default function AgronomyPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">Soil NO3-N</div><div className="font-mono text-sm font-bold text-field-300">{data.soil_tests[0]?.no3_n_kg_ha ?? '—'}</div></div>
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">Sulphur</div><div className="font-mono text-sm font-bold text-amber-400">{sulphur?.value ?? '—'}</div></div>
-                <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">Season rain</div><div className="font-mono text-sm font-bold text-sky-400">{balance.season_rain_mm}mm</div></div>
+                <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]">
+                  <div className="text-[10px] text-stone-500">Season rain</div>
+                  <div className="font-mono text-sm font-bold text-sky-400">{balance.season_rain_mm}mm</div>
+                  {balance.manual_rain_mm > 0 && (
+                    <div className="text-[9px] text-stone-600 mt-0.5">{balance.ws90_rain_mm}mm WS90 + {balance.manual_rain_mm}mm manual</div>
+                  )}
+                </div>
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">pH (CaCl2)</div><div className="font-mono text-sm font-bold text-stone-300">{data.ph_value ?? '—'}</div></div>
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">P Colwell</div><div className="font-mono text-sm font-bold text-stone-300">{data.phosphorus_tests[0]?.p_colwell_mg_kg ?? '—'}</div></div>
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">PBI</div><div className="font-mono text-sm font-bold text-stone-300">{data.phosphorus_tests[0]?.pbi ?? '—'}</div></div>
