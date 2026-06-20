@@ -43,6 +43,7 @@ export default function AdminPage() {
     id: '', farmer_id: '', paddock_name: '', hectares: '',
     crop_type_id: '', planted_date: '', growth_stage: '',
     spray_wind_override: '', frost_temp_override: '',
+    sim_phone_number: '', sim_provider: '', sim_activation_date: '', sim_imei: '',
   })
 
   useEffect(() => {
@@ -154,7 +155,7 @@ export default function AdminPage() {
         return [...prev, data]
       })
       setMessage({ type: 'success', text: `Station "${data.id}" saved` })
-      setStationForm({ id: '', farmer_id: '', paddock_name: '', hectares: '', crop_type_id: '', planted_date: '', growth_stage: '', spray_wind_override: '', frost_temp_override: '' })
+      setStationForm({ id: '', farmer_id: '', paddock_name: '', hectares: '', crop_type_id: '', planted_date: '', growth_stage: '', spray_wind_override: '', frost_temp_override: '', sim_phone_number: '', sim_provider: '', sim_activation_date: '', sim_imei: '' })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -381,8 +382,39 @@ export default function AdminPage() {
                     value={stationForm.frost_temp_override} onChange={e => setStationForm(p => ({ ...p, frost_temp_override: e.target.value }))} />
                 </div>
               </div>
+              <div className="border-t border-[#344a20] pt-3 mt-3">
+                <div className="text-xs text-stone-400 uppercase tracking-wider font-medium mb-2">SIM & Connectivity</div>
+                <div>
+                  <label className={labelCls}>SIM Phone Number</label>
+                  <input type="tel" className={inputCls} placeholder="e.g. +61412345678"
+                    value={stationForm.sim_phone_number} onChange={e => setStationForm(p => ({ ...p, sim_phone_number: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div>
+                    <label className={labelCls}>Provider</label>
+                    <select className={inputCls} value={stationForm.sim_provider} onChange={e => setStationForm(p => ({ ...p, sim_provider: e.target.value }))}>
+                      <option value="">Select…</option>
+                      <option value="Aldi Mobile">Aldi Mobile</option>
+                      <option value="Telstra">Telstra</option>
+                      <option value="Optus">Optus</option>
+                      <option value="Vodafone">Vodafone</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Activation Date</label>
+                    <input type="date" className={inputCls}
+                      value={stationForm.sim_activation_date} onChange={e => setStationForm(p => ({ ...p, sim_activation_date: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <label className={labelCls}>IMEI (optional)</label>
+                  <input type="text" className={inputCls} placeholder="Device identifier"
+                    value={stationForm.sim_imei} onChange={e => setStationForm(p => ({ ...p, sim_imei: e.target.value }))} />
+                </div>
+              </div>
               <button type="submit" disabled={saving}
-                className="w-full bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors mt-1">
+                className="w-full bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors mt-3">
                 {saving ? 'Saving…' : 'Save Station'}
               </button>
             </form>
