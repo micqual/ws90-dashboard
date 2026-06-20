@@ -429,7 +429,7 @@ export default function AdminPage() {
               {stations.map(s => (
                 <div key={s.id}>
                   <button
-                    onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '' }))}
+                    onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '', sim_phone_number: (s as any).sim_phone_number || '', sim_provider: (s as any).sim_provider || '', sim_activation_date: (s as any).sim_activation_date ? (s as any).sim_activation_date.split('T')[0] : '', sim_imei: (s as any).sim_imei || '' }))}
                     className="w-full flex items-start justify-between gap-2 bg-[#161e0c] hover:bg-[#222e16] rounded-lg px-3 py-2.5 border border-[#344a20] text-left transition-colors"
                   >
                     <div>
