@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import PaddockCard from '@/components/PaddockCard'
+import AddPaddockModal from '@/components/AddPaddockModal'
 
 export default function DashboardPage() {
   const [stations, setStations] = useState<any[]>([])
@@ -9,6 +10,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+  const [showAddPaddock, setShowAddPaddock] = useState(false)
 
   async function loadData() {
     try {
@@ -90,6 +92,13 @@ export default function DashboardPage() {
             {totalHa > 0 && ` · ${totalHa.toLocaleString()} ha total`}
           </p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAddPaddock(true)}
+            className="text-xs font-medium text-field-300 border border-field-600 bg-field-900/40 hover:bg-field-800/60 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            + Add Paddock
+          </button>
         <button
           onClick={loadData}
           className="text-xs text-stone-500 hover:text-stone-300 flex items-center gap-1.5 transition-colors"
@@ -100,7 +109,15 @@ export default function DashboardPage() {
           </svg>
           Refresh
         </button>
+        </div>
       </div>
+
+      {showAddPaddock && (
+        <AddPaddockModal
+          onClose={() => setShowAddPaddock(false)}
+          onCreated={() => { setShowAddPaddock(false); loadData() }}
+        />
+      )}
 
       {/* Summary bar */}
       {stations.length > 0 && (

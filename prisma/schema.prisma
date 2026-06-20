@@ -57,6 +57,7 @@ model Station {
   elevation_m         Float?
   installation_date   DateTime?
   paddock_notes       String?
+  is_virtual          Boolean?  @default(false)
   spray_wind_override Float?
   frost_temp_override Float?
   created_at          DateTime  @default(now())
