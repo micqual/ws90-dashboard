@@ -42,10 +42,10 @@ export async function POST(
   }
 
   if (type === 'application') {
-    const { applied_at, product, rate_kg_ha, n_kg_ha, method, notes } = body
+    const { applied_at, product, rate_kg_ha, n_kg_ha, method, notes, incorporated } = body
     const result = await prisma.$queryRaw`
-      INSERT INTO nitrogen_applications (station_id, applied_at, product, rate_kg_ha, n_kg_ha, method, notes)
-      VALUES (${stationId}, ${new Date(applied_at)}, ${product}, ${Number(rate_kg_ha)}, ${Number(n_kg_ha)}, ${method || 'broadcast'}, ${notes || null})
+      INSERT INTO nitrogen_applications (station_id, applied_at, product, rate_kg_ha, n_kg_ha, method, notes, incorporated)
+      VALUES (${stationId}, ${new Date(applied_at)}, ${product}, ${Number(rate_kg_ha)}, ${Number(n_kg_ha)}, ${method || 'broadcast'}, ${notes || null}, ${incorporated === true})
       RETURNING *
     ` as any[]
     return NextResponse.json(result[0])

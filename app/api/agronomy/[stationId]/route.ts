@@ -35,6 +35,47 @@ const S_CRITICAL: Record<string, number> = {
   sand: 12, 'sandy loam': 10, loam: 8, 'clay loam': 7, clay: 6,
 }
 
+// Base volatilization rate by product (%)
+const VOLATIL_BASE_RATE: Record<string, number> = {
+  urea: 0.20, uan: 0.15, 'ammonium sulfate': 0.08, dap: 0.05, map: 0.05,
+  'ammonium nitrate': 0.06, 'calcium ammonium nitrate': 0.05,
+  'anhydrous ammonia': 0.03, 'chicken manure': 0.10, other: 0.12,
+}
+
+// Soil type factor for volatilization (affects infiltration speed)
+const VOLATIL_SOIL_FACTOR: Record<string, number> = {
+  sand: 0.8, 'sandy loam': 0.85, loam: 1.0, 'clay loam': 1.1, clay: 1.15,
+}
+
+function volatilizationFactor(avgTempC: number): number {
+  if (avgTempC < 15) return 0.5
+  if (avgTempC < 25) return 1.0
+  if (avgTempC < 35) return 1.5
+  return 2.0
+}
+
+function phVolatilFactor(ph: number | null): number {
+  if (ph === null) return 1.0
+  if (ph < 6.0) return 0.7
+  if (ph <= 7.5) return 1.0
+  return 1.4
+}
+
+function rainTimingFactor(daysToRain: number | null): number {
+  if (daysToRain === null) return 1.2 // no rain found in window — high risk
+  if (daysToRain <= 2) return 0.3
+  if (daysToRain <= 5) return 0.6
+  if (daysToRain <= 7) return 0.85
+  return 1.2
+}
+
+function methodFactor(method: string): number {
+  const m = (method || '').toLowerCase()
+  if (m.includes('inject') || m.includes('fertigat')) return 0.1
+  if (m.includes('band')) return 0.5
+  return 1.0 // broadcast
+}
+
 function mitscherlich(N: number, Ymax: number, c: number, b: number = 10) {
   return Ymax * (1 - Math.exp(-c * (N + b)))
 }
@@ -128,7 +169,58 @@ export async function GET(
   const soilN = latestNTest ? Number(latestNTest.no3_n_kg_ha) + Number(latestNTest.nh4_n_kg_ha ?? 0) : 0
   const sulphurValue = latestNTest?.sulphur_mg_kg ? Number(latestNTest.sulphur_mg_kg) : null
 
-  const appliedN = applications.reduce((sum, a) => sum + Number(a.n_kg_ha), 0)
+  // Calculate volatilization loss per application
+  let volatilizationLoss = 0
+  const phForVolatil = pTests[0]?.ph_cacl2 ? Number(pTests[0].ph_cacl2) : null
+
+  for (const app of applications) {
+    const appliedDate = new Date(app.applied_at)
+    const windowEnd = new Date(appliedDate)
+    windowEnd.setDate(windowEnd.getDate() + 7)
+
+    // Average temp in the 7 days following application
+    let avgTempAfter = 20 // sensible default if no data
+    try {
+      const tempResult = await prisma.$queryRaw`
+        SELECT AVG(temperature_c) AS avg_temp FROM weather_readings
+        WHERE station_id = ${stationId} AND created_at >= ${appliedDate} AND created_at < ${windowEnd}
+      ` as any[]
+      if (tempResult[0]?.avg_temp !== null) avgTempAfter = Number(tempResult[0].avg_temp)
+    } catch (e) {}
+
+    // Days until first rain event >= 5mm after application
+    let daysToRain: number | null = null
+    try {
+      const rainEvents = await prisma.$queryRaw`
+        SELECT DATE(created_at) AS day, MAX(rain_diff) AS day_rain
+        FROM (
+          SELECT created_at, rain_mm - LAG(rain_mm) OVER (ORDER BY created_at) AS rain_diff
+          FROM weather_readings WHERE station_id = ${stationId} AND created_at >= ${appliedDate} AND created_at < ${windowEnd}
+        ) d
+        GROUP BY DATE(created_at)
+        HAVING SUM(GREATEST(rain_diff, 0)) >= 5
+        ORDER BY day ASC
+        LIMIT 1
+      ` as any[]
+      if (rainEvents[0]?.day) {
+        daysToRain = Math.round((new Date(rainEvents[0].day).getTime() - appliedDate.getTime()) / 86400000)
+      }
+    } catch (e) {}
+
+    const productKey = (app.product || '').toLowerCase()
+    const baseRate = VOLATIL_BASE_RATE[productKey] ?? VOLATIL_BASE_RATE.other
+    const soilFactor = VOLATIL_SOIL_FACTOR[soilType] ?? 1.0
+    const tempFactor = volatilizationFactor(avgTempAfter)
+    const phFactor = phVolatilFactor(phForVolatil)
+    const rainFactor = rainTimingFactor(daysToRain)
+    const methFactor = app.incorporated ? 0.3 : methodFactor(app.method)
+
+    const lossPct = Math.min(0.6, baseRate * tempFactor * phFactor * rainFactor * methFactor * soilFactor)
+    volatilizationLoss += Number(app.n_kg_ha) * lossPct
+  }
+
+  const appliedNGross = applications.reduce((sum, a) => sum + Number(a.n_kg_ha), 0)
+  const appliedN = Math.max(0, appliedNGross - volatilizationLoss)
 
   let leachingLoss = 0, leachingRisk = 'LOW'
   if (seasonRainMm > 300) { leachingLoss = soilN * leachRate.high; leachingRisk = 'HIGH' }
@@ -195,6 +287,8 @@ export async function GET(
     },
     balance: {
       soil_n: Math.round(soilN * 10) / 10,
+      applied_n_gross: Math.round(appliedNGross * 10) / 10,
+      volatilization_loss: Math.round(volatilizationLoss * 10) / 10,
       applied_n: Math.round(appliedN * 10) / 10,
       leaching_loss: Math.round(leachingLoss * 10) / 10,
       leaching_risk: leachingRisk,

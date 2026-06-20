@@ -43,6 +43,7 @@ export default function AgronomyPage() {
   const [appForm, setAppForm] = useState({
     applied_at: format(new Date(), 'yyyy-MM-dd'), product: 'Urea',
     rate_kg_ha: '', n_kg_ha: '', n_percent: '46', method: 'broadcast', notes: '',
+    incorporated: false,
   })
   const [noteForm, setNoteForm] = useState({ author_name: '', note: '', visible_to_farmer: true })
 
@@ -245,7 +246,7 @@ export default function AgronomyPage() {
 
           {/* Application Form */}
           {showAppForm && (
-            <form onSubmit={e => { e.preventDefault(); submitForm('application', appForm, () => setAppForm({ applied_at: format(new Date(), 'yyyy-MM-dd'), product: 'Urea', rate_kg_ha: '', n_kg_ha: '', n_percent: '46', method: 'broadcast', notes: '' }), () => setShowAppForm(false)) }}
+            <form onSubmit={e => { e.preventDefault(); submitForm('application', appForm, () => setAppForm({ applied_at: format(new Date(), 'yyyy-MM-dd'), product: 'Urea', rate_kg_ha: '', n_kg_ha: '', n_percent: '46', method: 'broadcast', notes: '', incorporated: false }), () => setShowAppForm(false)) }}
               className="mb-4 border border-[#344a20] rounded-lg p-4 space-y-3">
               <h3 className="text-sm font-medium text-stone-300">Log Nitrogen Application</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -256,6 +257,10 @@ export default function AgronomyPage() {
                 <div><label className={labelCls}>N%</label><input type="number" step="0.1" className={inputCls} value={appForm.n_percent} onChange={e => { const nPct = Number(e.target.value); const rate = Number(appForm.rate_kg_ha); setAppForm(p => ({ ...p, n_percent: e.target.value, n_kg_ha: rate && nPct ? String(Math.round(rate * nPct / 100 * 10) / 10) : p.n_kg_ha })) }} /></div>
                 <div><label className={labelCls}>Actual N (kg N/ha)</label><input type="number" step="0.1" className={inputCls} required value={appForm.n_kg_ha} onChange={e => setAppForm(p => ({ ...p, n_kg_ha: e.target.value }))} /></div>
               </div>
+              <label className="flex items-center gap-2 text-xs text-stone-400">
+                <input type="checkbox" checked={appForm.incorporated} onChange={e => setAppForm(p => ({ ...p, incorporated: e.target.checked }))} />
+                Incorporated into soil (reduces volatilization loss)
+              </label>
               <div><label className={labelCls}>Notes</label><input type="text" className={inputCls} value={appForm.notes} onChange={e => setAppForm(p => ({ ...p, notes: e.target.value }))} /></div>
               <div className="flex gap-2">
                 <button type="submit" disabled={saving} className="bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm">{saving ? 'Saving…' : 'Save'}</button>
@@ -320,6 +325,12 @@ export default function AgronomyPage() {
                 <span className="text-amber-400">{balance.crop_uptake} uptake</span><span>=</span>
                 <span className="text-stone-100 font-bold">{balance.available_n} kg N/ha</span>
               </div>
+              {balance.volatilization_loss > 0 && (
+                <div className="text-[10px] text-orange-400 mb-3 -mt-1 flex items-center gap-1">
+                  <span>💨</span>
+                  <span>{balance.volatilization_loss} kg N/ha lost to volatilization ({balance.applied_n_gross} kg applied → {balance.applied_n} kg net after loss)</span>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">Soil NO3-N</div><div className="font-mono text-sm font-bold text-field-300">{data.soil_tests[0]?.no3_n_kg_ha ?? '—'}</div></div>
                 <div className="bg-[#1a2310] rounded-lg p-2.5 border border-[#344a20]"><div className="text-[10px] text-stone-500">Sulphur</div><div className="font-mono text-sm font-bold text-amber-400">{sulphur?.value ?? '—'}</div></div>
