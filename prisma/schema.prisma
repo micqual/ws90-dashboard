@@ -58,6 +58,10 @@ model Station {
   installation_date   DateTime?
   paddock_notes       String?
   is_virtual          Boolean?  @default(false)
+  sim_phone_number    String?
+  sim_provider        String?
+  sim_activation_date DateTime?
+  sim_imei            String?
   spray_wind_override Float?
   frost_temp_override Float?
   created_at          DateTime  @default(now())

@@ -16,6 +16,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
   const [error, setError] = useState('')
   const [showLocation, setShowLocation] = useState(false)
   const [showFarmDetails, setShowFarmDetails] = useState(false)
+  const [showSim, setShowSim] = useState(false)
 
 
   const [form, setForm] = useState({
@@ -36,6 +37,12 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       ? format(new Date(station.installation_date), 'yyyy-MM-dd')
       : '',
     paddock_notes: station.paddock_notes ?? '',
+    sim_phone_number: station.sim_phone_number ?? '',
+    sim_provider: station.sim_provider ?? '',
+    sim_activation_date: station.sim_activation_date
+      ? format(new Date(station.sim_activation_date), 'yyyy-MM-dd')
+      : '',
+    sim_imei: station.sim_imei ?? '',
     agronomist_name: station.agronomist_name ?? '',
     agronomist_company: station.agronomist_company ?? '',
     agronomist_phone: station.agronomist_phone ?? '',
@@ -231,6 +238,53 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
                   Find coordinates with Google Maps (long press → drop pin) or GPS Status app. Elevation from{' '}
                   <a href="https://elevation.fsdf.org.au" target="_blank" className="text-field-400 underline">elevation.fsdf.org.au</a>
                 </p>
+              </div>
+            )}
+          </div>
+
+          {/* SIM & Connectivity — collapsible */}
+          <div className="border-t border-[#344a20] pt-2">
+            <div className={sectionHeaderCls} onClick={() => setShowSim(s => !s)}>
+              <span>SIM & Connectivity</span>
+              <svg className={`w-3.5 h-3.5 transition-transform ${showSim ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            {showSim && (
+              <div className="space-y-3 pt-2">
+                <div>
+                  <label className={labelCls}>SIM Phone Number</label>
+                  <input type="tel" className={inputCls} placeholder="e.g. +61412345678"
+                    value={form.sim_phone_number} onChange={e => setForm(p => ({ ...p, sim_phone_number: e.target.value }))} />
+                </div>
+                <div>
+                  <label className={labelCls}>Provider</label>
+                  <select className={inputCls} value={form.sim_provider} onChange={e => setForm(p => ({ ...p, sim_provider: e.target.value }))}>
+                    <option value="">Select provider…</option>
+                    <option value="Aldi Mobile">Aldi Mobile</option>
+                    <option value="Telstra">Telstra</option>
+                    <option value="Optus">Optus</option>
+                    <option value="Vodafone">Vodafone</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>SIM Activation Date</label>
+                    <input type="date" className={inputCls}
+                      value={form.sim_activation_date} onChange={e => setForm(p => ({ ...p, sim_activation_date: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>IMEI (optional)</label>
+                    <input type="text" className={inputCls} placeholder="Device identifier"
+                      value={form.sim_imei} onChange={e => setForm(p => ({ ...p, sim_imei: e.target.value }))} />
+                  </div>
+                </div>
+                {form.sim_activation_date && (
+                  <div className="text-[10px] text-stone-500 bg-[#161e0c] rounded-lg px-2.5 py-1.5">
+                    Plan expires: {new Date(new Date(form.sim_activation_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             )}
           </div>
