@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { BOM_STATIONS } from '@/lib/bom-stations'
 
 const StationHealthMap = dynamic(() => import('@/components/StationHealthMap'), { ssr: false })
 
@@ -47,6 +48,7 @@ export default function AdminPage() {
     crop_type_id: '', planted_date: '', growth_stage: '',
     spray_wind_override: '', frost_temp_override: '',
     sim_phone_number: '', sim_provider: '', sim_activation_date: '', sim_imei: '',
+    bom_station_id: '',
   })
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function AdminPage() {
         return [...prev, data]
       })
       setMessage({ type: 'success', text: `Station "${data.id}" saved` })
-      setStationForm({ id: '', farmer_id: '', paddock_name: '', hectares: '', crop_type_id: '', planted_date: '', growth_stage: '', spray_wind_override: '', frost_temp_override: '', sim_phone_number: '', sim_provider: '', sim_activation_date: '', sim_imei: '' })
+      setStationForm({ id: '', farmer_id: '', paddock_name: '', hectares: '', crop_type_id: '', planted_date: '', growth_stage: '', spray_wind_override: '', frost_temp_override: '', sim_phone_number: '', sim_provider: '', sim_activation_date: '', sim_imei: '', bom_station_id: '' })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -416,6 +418,16 @@ export default function AdminPage() {
                     value={stationForm.sim_imei} onChange={e => setStationForm(p => ({ ...p, sim_imei: e.target.value }))} />
                 </div>
               </div>
+              <div className="border-t border-[#344a20] pt-3 mt-3">
+                <div className="text-xs text-stone-400 uppercase tracking-wider font-medium mb-2">BoM Station (optional)</div>
+                <select className={inputCls} value={stationForm.bom_station_id} onChange={e => setStationForm(p => ({ ...p, bom_station_id: e.target.value }))}>
+                  <option value="">None</option>
+                  {BOM_STATIONS.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-stone-500 mt-1.5">Select a nearby BoM weather station for comparison data on paddock cards.</p>
+              </div>
               <button type="submit" disabled={saving}
                 className="w-full bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors mt-3">
                 {saving ? 'Saving…' : 'Save Station'}
@@ -432,7 +444,7 @@ export default function AdminPage() {
               {stations.map(s => (
                 <div key={s.id}>
                   <button
-                    onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '', sim_phone_number: (s as any).sim_phone_number || '', sim_provider: (s as any).sim_provider || '', sim_activation_date: (s as any).sim_activation_date ? (s as any).sim_activation_date.split('T')[0] : '', sim_imei: (s as any).sim_imei || '' }))}
+                    onClick={() => setStationForm(p => ({ ...p, id: s.id, paddock_name: s.paddock_name || '', hectares: s.hectares?.toString() || '', farmer_id: (s as any).farmer_id || '', sim_phone_number: (s as any).sim_phone_number || '', sim_provider: (s as any).sim_provider || '', sim_activation_date: (s as any).sim_activation_date ? (s as any).sim_activation_date.split('T')[0] : '', sim_imei: (s as any).sim_imei || '', bom_station_id: (s as any).bom_station_id || '' }))}
                     className="w-full flex items-start justify-between gap-2 bg-[#161e0c] hover:bg-[#222e16] rounded-lg px-3 py-2.5 border border-[#344a20] text-left transition-colors"
                   >
                     <div>

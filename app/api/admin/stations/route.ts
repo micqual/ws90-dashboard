@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       id, farmer_id, paddock_name, hectares, crop_type_id,
       planted_date, growth_stage, spray_wind_override, frost_temp_override,
       sim_phone_number, sim_provider, sim_activation_date, sim_imei,
+      bom_station_id,
     } = body
 
     if (!id || !farmer_id) {
@@ -44,13 +45,14 @@ export async function POST(request: Request) {
         hectares: hectares ? Number(hectares) : null,
         crop_type_id: crop_type_id ? Number(crop_type_id) : null,
         planted_date: planted_date ? new Date(planted_date) : null,
-        growth_stage, 
+        growth_stage,
         spray_wind_override: spray_wind_override ? Number(spray_wind_override) : null,
         frost_temp_override: frost_temp_override ? Number(frost_temp_override) : null,
         sim_phone_number: sim_phone_number || null,
         sim_provider: sim_provider || null,
         sim_imei: sim_imei || null,
         sim_activation_date: sim_activation_date ? new Date(sim_activation_date) : null,
+        bom_station_id: bom_station_id || null,
       },
       update: {
         farmer_id, paddock_name,
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
         sim_provider: sim_provider || null,
         sim_imei: sim_imei || null,
         sim_activation_date: sim_activation_date ? new Date(sim_activation_date) : null,
+        bom_station_id: bom_station_id || null,
       },
       include: { farmer: true, crop_type: true },
     })

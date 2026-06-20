@@ -62,6 +62,13 @@ model Station {
   sim_provider        String?
   sim_activation_date DateTime?
   sim_imei            String?
+  bom_station_id      String?
+  bom_station_name    String?
+  bom_last_reading_time DateTime?
+  bom_temp_c          Float?
+  bom_humidity_pct    Float?
+  bom_wind_speed_kmh  Float?
+  bom_wind_direction  String?
   spray_wind_override Float?
   frost_temp_override Float?
   created_at          DateTime  @default(now())
