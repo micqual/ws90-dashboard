@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   const {
     id, farmer_id, paddock_name, hectares, crop_type_id,
     planted_date, growth_stage, spray_wind_override, frost_temp_override,
+    sim_phone_number, sim_provider, sim_activation_date, sim_imei,
   } = body
 
   if (!id || !farmer_id) {
@@ -40,12 +41,16 @@ export async function POST(request: Request) {
       crop_type_id: crop_type_id ? Number(crop_type_id) : null,
       planted_date: planted_date ? new Date(planted_date) : null,
       growth_stage, spray_wind_override, frost_temp_override,
+      sim_phone_number, sim_provider, sim_imei,
+      sim_activation_date: sim_activation_date ? new Date(sim_activation_date) : null,
     },
     update: {
       farmer_id, paddock_name, hectares,
       crop_type_id: crop_type_id ? Number(crop_type_id) : null,
       planted_date: planted_date ? new Date(planted_date) : null,
       growth_stage, spray_wind_override, frost_temp_override,
+      sim_phone_number, sim_provider, sim_imei,
+      sim_activation_date: sim_activation_date ? new Date(sim_activation_date) : null,
     },
     include: { farmer: true, crop_type: true },
   })
