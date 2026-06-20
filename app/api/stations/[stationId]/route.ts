@@ -31,7 +31,6 @@ export async function PATCH(
     soil_type, target_yield_t_ha, farm_name, farm_address,
     latitude, longitude, elevation_m, installation_date, paddock_notes,
     agronomist_name, agronomist_company, agronomist_phone,
-    sim_phone_number, sim_provider, sim_activation_date, sim_imei,
   } = body
 
   const updated = await prisma.station.update({
@@ -51,10 +50,6 @@ export async function PATCH(
       elevation_m: elevation_m ? Number(elevation_m) : station.elevation_m,
       installation_date: installation_date ? new Date(installation_date) : station.installation_date,
       paddock_notes: paddock_notes || station.paddock_notes,
-      sim_phone_number: sim_phone_number || station.sim_phone_number,
-      sim_provider: sim_provider || station.sim_provider,
-      sim_activation_date: sim_activation_date ? new Date(sim_activation_date) : station.sim_activation_date,
-      sim_imei: sim_imei || station.sim_imei,
     },
     include: { crop_type: true },
   })
