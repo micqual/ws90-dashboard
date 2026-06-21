@@ -57,7 +57,7 @@ model Agronomist {
 model PaddockAgronomist {
   id              String      @id @default(cuid())
   station_id      String
-  agronomist_id   String
+  agronomist_id   String      @db.Text
   station         Station     @relation(fields: [station_id], references: [id], onDelete: Cascade)
   agronomist      Agronomist  @relation(fields: [agronomist_id], references: [id], onDelete: Cascade)
   created_at      DateTime    @default(now())
