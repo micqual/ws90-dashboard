@@ -421,8 +421,6 @@ export async function GET(request: Request, { params }: { params: { stationId: s
       body: JSON.stringify({
         html: html,
         printBackground: true,
-        format: 'A4',
-        margin: { top: '0', bottom: '0', left: '0', right: '0' },
       }),
     })
 
