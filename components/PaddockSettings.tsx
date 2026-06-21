@@ -196,26 +196,28 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
 
                 <div className="border-t border-[#344a20] pt-3 mt-3">
                   <label className={labelCls}>Assign Agronomists to This Paddock</label>
-                  <select 
-                    multiple
-                    size={Math.min(agronomists.length || 1, 4)}
-                    value={selectedAgronomistIds}
-                    onChange={e => {
-                      const allOptions = Array.from(e.target.options)
-                      const selected = allOptions.filter(opt => opt.selected).map(opt => opt.value)
-                      setSelectedAgronomistIds(selected)
-                    }}
-                    className="w-full bg-[#161e0c] border border-[#344a20] rounded-lg px-3 py-2 text-stone-100 text-sm focus:outline-none focus:border-field-500 focus:ring-1 focus:ring-field-500/30"
-                  >
+                  <div className="space-y-2">
                     {agronomists.length === 0 ? (
-                      <option disabled>No agronomists created yet</option>
+                      <p className="text-xs text-stone-500">No agronomists created yet. Create them in Admin first.</p>
                     ) : (
                       agronomists.map(a => (
-                        <option key={a.id} value={a.id}>{a.name || a.email}</option>
+                        <label key={a.id} className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" 
+                            checked={selectedAgronomistIds.includes(a.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedAgronomistIds(prev => [...prev, a.id])
+                              } else {
+                                setSelectedAgronomistIds(prev => prev.filter(id => id !== a.id))
+                              }
+                            }}
+                            className="rounded border-stone-400"
+                          />
+                          <span className="text-sm text-stone-300">{a.name || a.email}</span>
+                        </label>
                       ))
                     )}
-                  </select>
-                  <p className="text-xs text-stone-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                  </div>
                 </div>
               </div>
             )}
