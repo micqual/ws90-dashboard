@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { fetchBomData } from '@/lib/bom-fetch'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,11 +11,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Call the bom/fetch endpoint directly instead of via HTTP
-    // to avoid DATABASE_URL environment issues
-    const { prisma } = await import('@/lib/prisma')
-    const { fetchBomData } = await import('@/lib/bom-fetch')
-    
     // Get all stations with BoM station selected
     const stations = await prisma.station.findMany({
       where: { bom_station_id: { not: null } },
@@ -50,12 +47,7 @@ export async function GET(request: Request) {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
 
-    const res = {
-      success: true,
-      data: { updated, total: stations.length, errors: errors.length > 0 ? errors : undefined }
-    }
-
-    return NextResponse.json(res)
+    return NextResponse.json({ success: true, updated, total: stations.length, errors: errors.length > 0 ? errors : undefined })
   } catch (error: any) {
     console.error('Cron BoM fetch failed:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
