@@ -64,7 +64,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       setCropTypes([])
       setAgronomists([])
     }).finally(() => setLoading(false))
-  }, [])
+  }, [station])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
