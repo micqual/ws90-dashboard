@@ -29,6 +29,7 @@ interface CropType {
   variety: string | null
 }
 
+// Agronomist management added
 export default function AdminPage() {
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [stations, setStations] = useState<Station[]>([])
