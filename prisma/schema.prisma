@@ -37,7 +37,22 @@ model Farmer {
   agronomist_company String?
   agronomist_phone   String?
   stations      Station[]
+  agronomists   Agronomist[]
   @@map("farmers")
+}
+
+model Agronomist {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  password_hash     String
+  farmer_id         String    @db.Uuid
+  farmer            Farmer    @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
+  active            Boolean   @default(true)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@map("agronomists")
 }
 
 model Station {

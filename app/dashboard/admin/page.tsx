@@ -32,8 +32,9 @@ interface CropType {
 export default function AdminPage() {
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [stations, setStations] = useState<Station[]>([])
+  const [agronomists, setAgronomists] = useState<any[]>([])
   const [cropTypes, setCropTypes] = useState<CropType[]>([])
-  const [activeTab, setActiveTab] = useState<'farmers' | 'stations' | 'map'>('farmers')
+  const [activeTab, setActiveTab] = useState<'farmers' | 'stations' | 'map' | 'agronomists'>('farmers')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -43,6 +44,7 @@ export default function AdminPage() {
   const [convertError, setConvertError] = useState('')
 
   const [farmerForm, setFarmerForm] = useState({ name: '', email: '', password: '', tier: 'base' })
+  const [agronomistForm, setAgronomistForm] = useState({ email: '', name: '', password: '', farmer_id: '' })
   const [stationForm, setStationForm] = useState({
     id: '', farmer_id: '', paddock_name: '', hectares: '',
     crop_type_id: '', planted_date: '', growth_stage: '',
@@ -56,10 +58,12 @@ export default function AdminPage() {
       fetch('/api/admin/farmers').then(r => r.json()),
       fetch('/api/admin/stations').then(r => r.json()),
       fetch('/api/admin/crop-types').then(r => r.json()),
-    ]).then(([f, s, c]) => {
+      fetch('/api/admin/agronomists').then(r => r.json()),
+    ]).then(([f, s, c, a]) => {
       setFarmers(Array.isArray(f) ? f : [])
       setStations(Array.isArray(s) ? s : [])
       setCropTypes(Array.isArray(c) ? c : [])
+      setAgronomists(Array.isArray(a) ? a : [])
     }).finally(() => setLoading(false))
   }, [])
 
@@ -85,6 +89,28 @@ export default function AdminPage() {
       setConvertError(err.message)
     } finally {
       setConverting(false)
+    }
+  }
+
+  async function createAgronomist(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/admin/agronomists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(agronomistForm),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setAgronomists(prev => [...prev, data])
+      setAgronomistForm({ email: '', name: '', password: '', farmer_id: '' })
+      setMessage({ type: 'success', text: `Agronomist "${data.email}" created` })
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -198,7 +224,7 @@ export default function AdminPage() {
       )}
 
       <div className="flex gap-1 border-b border-[#344a20]">
-        {(['farmers', 'stations', 'map'] as const).map(tab => (
+        {(['farmers', 'stations', 'map', 'agronomists'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -528,6 +554,66 @@ export default function AdminPage() {
         <div className="card p-5">
           <h2 className="font-semibold text-stone-200 mb-4">Station Health Map</h2>
           <StationHealthMap stations={stations} />
+        </div>
+      )}
+
+      {activeTab === 'agronomists' && (
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="card p-5">
+            <h2 className="font-semibold text-stone-200 mb-4">Create Agronomist</h2>
+            <form onSubmit={createAgronomist} className="space-y-3">
+              <div>
+                <label className={labelCls}>Email</label>
+                <input className={inputCls} type="email" placeholder="agronomist@example.com" required
+                  value={agronomistForm.email} onChange={e => setAgronomistForm(p => ({ ...p, email: e.target.value }))} />
+              </div>
+              <div>
+                <label className={labelCls}>Name</label>
+                <input className={inputCls} placeholder="John Smith"
+                  value={agronomistForm.name} onChange={e => setAgronomistForm(p => ({ ...p, name: e.target.value }))} />
+              </div>
+              <div>
+                <label className={labelCls}>Password</label>
+                <input className={inputCls} type="password" placeholder="••••••••" required
+                  value={agronomistForm.password} onChange={e => setAgronomistForm(p => ({ ...p, password: e.target.value }))} />
+              </div>
+              <div>
+                <label className={labelCls}>Assign to Farmer</label>
+                <select className={inputCls} required
+                  value={agronomistForm.farmer_id} onChange={e => setAgronomistForm(p => ({ ...p, farmer_id: e.target.value }))}>
+                  <option value="">Select farmer…</option>
+                  {farmers.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" disabled={saving}
+                className="w-full bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors">
+                {saving ? 'Creating…' : 'Create Agronomist'}
+              </button>
+            </form>
+          </div>
+
+          <div className="card p-5">
+            <h2 className="font-semibold text-stone-200 mb-4">
+              Agronomists <span className="text-stone-500 font-normal">({agronomists.length})</span>
+            </h2>
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              {agronomists.length === 0 && <div className="text-sm text-stone-500">No agronomists yet</div>}
+              {agronomists.map(a => (
+                <div key={a.id} className="bg-[#161e0c] rounded-lg px-3 py-2.5 border border-[#344a20]">
+                  <div className="text-sm font-medium text-stone-200">{a.name || a.email}</div>
+                  <div className="text-xs text-stone-500">{a.email}</div>
+                  <div className="text-xs text-stone-500 mt-1">
+                    Farmer: {a.farmer?.name || 'Unknown'}
+                  </div>
+                  {!a.active && (
+                    <div className="text-xs text-red-400 mt-1">🔒 Disabled</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
