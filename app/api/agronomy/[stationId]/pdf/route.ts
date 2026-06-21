@@ -413,19 +413,25 @@ export async function GET(request: Request, { params }: { params: { stationId: s
 </html>`
 
   try {
-    const chromium = (await import('@sparticuz/chromium')).default
-    const puppeteer = await import('puppeteer-core')
-
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: true,
+    const browserlessUrl = `https://chrome.browserless.io/pdf?token=${process.env.BROWSERLESS_TOKEN}`
+    
+    const response = await fetch(browserlessUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        html: html,
+        printBackground: true,
+        format: 'A4',
+        margin: { top: '0', bottom: '0', left: '0', right: '0' },
+      }),
     })
 
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'load' })
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '0', bottom: '0', left: '0', right: '0' } })
-    await browser.close()
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Browserless error: ${error}`)
+    }
+
+    const pdfBuffer = await response.arrayBuffer()
 
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
