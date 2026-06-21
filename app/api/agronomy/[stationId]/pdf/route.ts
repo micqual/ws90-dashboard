@@ -413,14 +413,11 @@ export async function GET(request: Request, { params }: { params: { stationId: s
 </html>`
 
   try {
-    const browserlessUrl = `https://chrome.browserless.io/pdf?token=${process.env.BROWSERLESS_TOKEN}`
-    
-    const response = await fetch(browserlessUrl, {
+    const response = await fetch('https://chrome.browserless.io/pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         html: html,
-        printBackground: true,
       }),
     })
 
