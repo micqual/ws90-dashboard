@@ -192,21 +192,7 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
                   <textarea className={inputCls} rows={2} placeholder="e.g. North facing, history of barley yellow dwarf"
                     value={form.paddock_notes} onChange={e => setForm(p => ({ ...p, paddock_notes: e.target.value }))} />
                 </div>
-                <div className="border-t border-[#344a20] pt-3">
-                  <label className={labelCls}>Agronomist Name</label>
-                  <input type="text" className={inputCls} placeholder="e.g. Sarah Chen"
-                    value={form.agronomist_name} onChange={e => setForm(p => ({ ...p, agronomist_name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className={labelCls}>Agronomist Company</label>
-                  <input type="text" className={inputCls} placeholder="e.g. Landmark Agronomy"
-                    value={form.agronomist_company} onChange={e => setForm(p => ({ ...p, agronomist_company: e.target.value }))} />
-                </div>
-                <div>
-                  <label className={labelCls}>Agronomist Phone</label>
-                  <input type="text" className={inputCls} placeholder="e.g. 0418 555 234"
-                    value={form.agronomist_phone} onChange={e => setForm(p => ({ ...p, agronomist_phone: e.target.value }))} />
-                </div>
+
 
                 <div className="border-t border-[#344a20] pt-3 mt-3">
                   <label className={labelCls}>Assign Agronomists to This Paddock</label>
