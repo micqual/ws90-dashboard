@@ -46,11 +46,16 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
   const plantedInPast = hasPlantedDate && new Date(form.planted_date) <= new Date()
 
   useEffect(() => {
-    fetch('/api/admin/crop-types')
-      .then(r => r.json())
-      .then(data => setCropTypes(Array.isArray(data) ? data : []))
-      .catch(() => setCropTypes([]))
-      .finally(() => setLoading(false))
+    Promise.all([
+      fetch('/api/admin/crop-types').then(r => r.json()),
+      fetch('/api/admin/agronomists').then(r => r.json()),
+    ]).then(([crops, agros]) => {
+      setCropTypes(Array.isArray(crops) ? crops : [])
+      setAgronomists(Array.isArray(agros) ? agros : [])
+    }).catch(() => {
+      setCropTypes([])
+      setAgronomists([])
+    }).finally(() => setLoading(false))
   }, [])
 
   async function handleSave(e: React.FormEvent) {
