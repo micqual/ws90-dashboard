@@ -45,7 +45,7 @@ export default function AdminPage() {
   const [convertError, setConvertError] = useState('')
 
   const [farmerForm, setFarmerForm] = useState({ name: '', email: '', password: '', tier: 'base' })
-  const [agronomistForm, setAgronomistForm] = useState({ email: '', name: '', password: '', farmer_id: '' })
+  const [agronomistForm, setAgronomistForm] = useState({ email: '', name: '', password: '' })
   const [stationForm, setStationForm] = useState({
     id: '', farmer_id: '', paddock_name: '', hectares: '',
     crop_type_id: '', planted_date: '', growth_stage: '',
@@ -106,7 +106,7 @@ export default function AdminPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setAgronomists(prev => [...prev, data])
-      setAgronomistForm({ email: '', name: '', password: '', farmer_id: '' })
+      setAgronomistForm({ email: '', name: '', password: '' })
       setMessage({ type: 'success', text: `Agronomist "${data.email}" created` })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
@@ -578,16 +578,7 @@ export default function AdminPage() {
                 <input className={inputCls} type="password" placeholder="••••••••" required
                   value={agronomistForm.password} onChange={e => setAgronomistForm(p => ({ ...p, password: e.target.value }))} />
               </div>
-              <div>
-                <label className={labelCls}>Assign to Farmer</label>
-                <select className={inputCls} required
-                  value={agronomistForm.farmer_id} onChange={e => setAgronomistForm(p => ({ ...p, farmer_id: e.target.value }))}>
-                  <option value="">Select farmer…</option>
-                  {farmers.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </select>
-              </div>
+
               <button type="submit" disabled={saving}
                 className="w-full bg-field-700 hover:bg-field-600 disabled:opacity-50 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors">
                 {saving ? 'Creating…' : 'Create Agronomist'}
@@ -605,9 +596,7 @@ export default function AdminPage() {
                 <div key={a.id} className="bg-[#161e0c] rounded-lg px-3 py-2.5 border border-[#344a20]">
                   <div className="text-sm font-medium text-stone-200">{a.name || a.email}</div>
                   <div className="text-xs text-stone-500">{a.email}</div>
-                  <div className="text-xs text-stone-500 mt-1">
-                    Farmer: {a.farmer?.name || 'Unknown'}
-                  </div>
+
                   {!a.active && (
                     <div className="text-xs text-red-400 mt-1">🔒 Disabled</div>
                   )}

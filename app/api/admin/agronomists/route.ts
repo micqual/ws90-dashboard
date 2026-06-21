@@ -13,7 +13,6 @@ export async function GET() {
   }
 
   const agronomists = await prisma.agronomist.findMany({
-    include: { farmer: true },
     orderBy: { email: 'asc' },
   })
 
@@ -27,10 +26,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { email, name, password, farmer_id } = await request.json()
+    const { email, name, password } = await request.json()
 
-    if (!email || !password || !farmer_id) {
-      return NextResponse.json({ error: 'Email, password, and farmer ID required' }, { status: 400 })
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
     // Check email doesn't exist
@@ -43,8 +42,8 @@ export async function POST(request: Request) {
     const password_hash = await bcrypt.hash(password, 10)
 
     const agronomist = await prisma.agronomist.create({
-      data: { email, name, password_hash, farmer_id },
-      include: { farmer: true },
+      data: { email, name, password_hash },
+      include: { paddocks: { include: { station: true } } },
     })
 
     return NextResponse.json(agronomist)

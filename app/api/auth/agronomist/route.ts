@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     const agronomist = await prisma.agronomist.findUnique({
       where: { email },
-      include: { farmer: { include: { stations: true } } },
+      include: { paddocks: { include: { station: true } } },
     })
 
     if (!agronomist) {
@@ -35,9 +35,7 @@ export async function POST(request: Request) {
       id: agronomist.id,
       email: agronomist.email,
       name: agronomist.name,
-      farmer_id: agronomist.farmer_id,
-      farmer_name: agronomist.farmer?.name,
-      stations: agronomist.farmer?.stations || [],
+      paddocks: agronomist.paddocks.map(p => p.station),
     })
   } catch (error: any) {
     console.error('Agronomist login error:', error)

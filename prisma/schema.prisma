@@ -37,22 +37,33 @@ model Farmer {
   agronomist_company String?
   agronomist_phone   String?
   stations      Station[]
-  agronomists   Agronomist[]
+
   @@map("farmers")
 }
 
 model Agronomist {
-  id                String    @id @default(cuid())
-  email             String    @unique
+  id                String              @id @default(cuid())
+  email             String              @unique
   name              String?
   password_hash     String
-  farmer_id         String    @db.Uuid
-  farmer            Farmer    @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
-  active            Boolean   @default(true)
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  active            Boolean             @default(true)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  paddocks          PaddockAgronomist[]
 
   @@map("agronomists")
+}
+
+model PaddockAgronomist {
+  id              String      @id @default(cuid())
+  station_id      String
+  agronomist_id   String
+  station         Station     @relation(fields: [station_id], references: [id], onDelete: Cascade)
+  agronomist      Agronomist  @relation(fields: [agronomist_id], references: [id], onDelete: Cascade)
+  created_at      DateTime    @default(now())
+
+  @@unique([station_id, agronomist_id])
+  @@map("paddock_agronomists")
 }
 
 model Station {
@@ -90,6 +101,7 @@ model Station {
   farmer              Farmer    @relation(fields: [farmer_id], references: [id])
   crop_type           CropType? @relation(fields: [crop_type_id], references: [id])
   weather_readings    WeatherReading[]
+  agronomists         PaddockAgronomist[]
   @@map("stations")
 }
 
