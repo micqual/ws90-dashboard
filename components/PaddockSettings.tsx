@@ -11,6 +11,8 @@ interface PaddockSettingsProps {
 
 export default function PaddockSettings({ station, onSaved, onClose }: PaddockSettingsProps) {
   const [cropTypes, setCropTypes] = useState<any[]>([])
+  const [agronomists, setAgronomists] = useState<any[]>([])
+  const [selectedAgronomistIds, setSelectedAgronomistIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -70,6 +72,16 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save')
+      
+      // Save agronomist assignments
+      if (selectedAgronomistIds.length > 0) {
+        await fetch(`/api/stations/${station.id}/agronomists`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agronomist_ids: selectedAgronomistIds }),
+        })
+      }
+      
       onSaved(data)
     } catch (err: any) {
       setError(err.message)
@@ -194,6 +206,32 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
                   <label className={labelCls}>Agronomist Phone</label>
                   <input type="text" className={inputCls} placeholder="e.g. 0418 555 234"
                     value={form.agronomist_phone} onChange={e => setForm(p => ({ ...p, agronomist_phone: e.target.value }))} />
+                </div>
+
+                <div className="border-t border-[#344a20] pt-3 mt-3">
+                  <label className={labelCls}>Assign Agronomists to This Paddock</label>
+                  <div className="space-y-2">
+                    {agronomists.length === 0 ? (
+                      <p className="text-xs text-stone-500">No agronomists created yet. Create them in Admin first.</p>
+                    ) : (
+                      agronomists.map(a => (
+                        <label key={a.id} className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" 
+                            checked={selectedAgronomistIds.includes(a.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedAgronomistIds(prev => [...prev, a.id])
+                              } else {
+                                setSelectedAgronomistIds(prev => prev.filter(id => id !== a.id))
+                              }
+                            }}
+                            className="rounded border-stone-400"
+                          />
+                          <span className="text-sm text-stone-300">{a.name || a.email}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
