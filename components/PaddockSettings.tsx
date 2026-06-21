@@ -54,6 +54,12 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
     ]).then(([crops, agros]) => {
       setCropTypes(Array.isArray(crops) ? crops : [])
       setAgronomists(Array.isArray(agros) ? agros : [])
+      
+      // Load existing agronomist assignments for this paddock
+      if (station.agronomists && station.agronomists.length > 0) {
+        const ids = station.agronomists.map((pa: any) => pa.agronomist_id)
+        setSelectedAgronomistIds(ids)
+      }
     }).catch(() => {
       setCropTypes([])
       setAgronomists([])
@@ -73,14 +79,12 @@ export default function PaddockSettings({ station, onSaved, onClose }: PaddockSe
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to save')
       
-      // Save agronomist assignments
-      if (selectedAgronomistIds.length > 0) {
-        await fetch(`/api/stations/${station.id}/agronomists`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agronomist_ids: selectedAgronomistIds }),
-        })
-      }
+      // Save agronomist assignments (always save, even if empty)
+      await fetch(`/api/stations/${station.id}/agronomists`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agronomist_ids: selectedAgronomistIds }),
+      })
       
       onSaved(data)
     } catch (err: any) {
